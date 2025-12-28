@@ -1,0 +1,20 @@
+-- file.tsx --
+~~ jsxQuoteStyle: single, bracketSameLine: true, indentStyle: space ~~
+== should format ==
+const test = "";
+const test2 = <div prop="asdf" />;
+const test3 = <div
+example="123123123123123123123123123123123123123"
+example2="123123123123123123123123123123123123123"
+>Test</div>;
+
+[expect]
+const test = "";
+const test2 = <div prop='asdf' />;
+const test3 = (
+  <div
+    example='123123123123123123123123123123123123123'
+    example2='123123123123123123123123123123123123123'>
+    Test
+  </div>
+);

@@ -1,0 +1,9 @@
+== should format ==
+console.log(   5   )
+
+[expect]
+console.log(5);
+
+== should format empty ==
+
+[expect]

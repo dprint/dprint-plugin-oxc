@@ -1,0 +1,36 @@
+[package]
+name = "dprint-plugin-oxc"
+version = "0.0.1"
+authors = ["David Sherret <dsherret@gmail.com>"]
+edition = "2024"
+homepage = "https://github.com/dprint/dprint-plugin-oxc"
+keywords = ["formatting", "formatter", "oxc"]
+license = "MIT"
+repository = "https://github.com/dprint/dprint-plugin-oxc"
+description = "JavaScript/TypeScript/JSON formatter for dprint via Oxc."
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[profile.release]
+opt-level = 3
+debug = false
+lto = true
+debug-assertions = false
+overflow-checks = false
+panic = "abort"
+
+[features]
+wasm = ["serde_json", "dprint-core/wasm"]
+
+[dependencies]
+anyhow = "1.0.51"
+dprint-core = { version = "0.67.4", default-features = false }
+oxc_formatter = { git = "https://github.com/oxc-project/oxc", tag = "crates_v0.105.0" }
+serde = { version = "1.0.210", features = ["derive"] }
+serde_json = { version = "1.0", optional = true }
+
+[dev-dependencies]
+dprint-development = "0.10.1"
+pretty_assertions = "1.4.0"
+serde_json = { version = "1.0" }

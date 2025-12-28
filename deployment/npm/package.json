@@ -1,0 +1,29 @@
+{
+  "name": "@dprint/oxc",
+  "version": "0.0.0",
+  "description": "Wasm buffer for dprint-plugin-oxc.",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dprint/dprint-plugin-oxc.git"
+  },
+  "keywords": [
+    "oxc",
+    "code",
+    "formatter",
+    "dprint"
+  ],
+  "author": "David Sherret",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dprint/dprint-plugin-oxc/issues"
+  },
+  "homepage": "https://github.com/dprint/dprint-plugin-oxc#readme",
+  "scripts": {
+    "test": "node index.test.js"
+  },
+  "devDependencies": {
+    "@dprint/formatter": "~0.4.0"
+  }
+}
