@@ -14,16 +14,16 @@ use dprint_core::plugins::SyncFormatRequest;
 use dprint_core::plugins::SyncHostFormatRequest;
 use dprint_core::plugins::SyncPluginHandler;
 
-struct BiomePluginHandler;
+struct OxcPluginHandler;
 
-impl SyncPluginHandler<Configuration> for BiomePluginHandler {
+impl SyncPluginHandler<Configuration> for OxcPluginHandler {
   fn resolve_config(
     &mut self,
     config: ConfigKeyMap,
     global_config: &GlobalConfiguration,
   ) -> PluginResolveConfigurationResult<Configuration> {
     let result = resolve_config(config, global_config);
-    let mut file_extensions = vec![
+    let file_extensions = vec![
       "ts".to_string(),
       "tsx".to_string(),
       "cts".to_string(),
@@ -32,15 +32,7 @@ impl SyncPluginHandler<Configuration> for BiomePluginHandler {
       "jsx".to_string(),
       "cjs".to_string(),
       "mjs".to_string(),
-      "json".to_string(),
-      "jsonc".to_string(),
     ];
-    if result.config.css_enabled == Some(true) {
-      file_extensions.push("css".to_string());
-    }
-    if result.config.graphql_enabled == Some(true) {
-      file_extensions.push("graphql".to_string());
-    }
     PluginResolveConfigurationResult {
       config: result.config,
       diagnostics: result.diagnostics,
@@ -60,13 +52,13 @@ impl SyncPluginHandler<Configuration> for BiomePluginHandler {
     PluginInfo {
       name: env!("CARGO_PKG_NAME").to_string(),
       version: version.clone(),
-      config_key: "biome".to_string(),
-      help_url: "https://dprint.dev/plugins/biome".to_string(),
+      config_key: "oxc".to_string(),
+      help_url: "https://dprint.dev/plugins/oxc".to_string(),
       config_schema_url: format!(
-        "https://plugins.dprint.dev/dprint/dprint-plugin-biome/{}/schema.json",
+        "https://plugins.dprint.dev/dprint/dprint-plugin-oxc/{}/schema.json",
         version
       ),
-      update_url: Some("https://plugins.dprint.dev/dprint/dprint-plugin-biome/latest.json".to_string()),
+      update_url: Some("https://plugins.dprint.dev/dprint/dprint-plugin-oxc/latest.json".to_string()),
     }
   }
 
@@ -89,4 +81,4 @@ impl SyncPluginHandler<Configuration> for BiomePluginHandler {
   }
 }
 
-generate_plugin_code!(BiomePluginHandler, BiomePluginHandler);
+generate_plugin_code!(OxcPluginHandler, OxcPluginHandler);

@@ -2,7 +2,7 @@
 const fs = require("fs");
 const path = require("path");
 const args = process.argv.slice(2);
-const wasmPath = path.join(__dirname, "../../target/wasm32-unknown-unknown/release/dprint_plugin_biome.wasm");
+const wasmPath = path.join(__dirname, "../../target/wasm32-unknown-unknown/release/dprint_plugin_oxc.wasm");
 const targetPath = path.join(__dirname, "plugin.wasm");
 fs.copyFileSync(wasmPath, targetPath);
 

@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     name: check updates
-    if: github.repository == 'dprint/dprint-plugin-biome'
+    if: github.repository == 'dprint/dprint-plugin-oxc'
     runs-on: ubuntu-latest
     timeout-minutes: 45
 

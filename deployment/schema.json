@@ -1,8 +1,23 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://plugins.dprint.dev/dprint/dprint-plugin-biome/0.0.0/schema.json",
+  "$id": "https://plugins.dprint.dev/dprint/dprint-plugin-oxc/0.0.0/schema.json",
   "type": "object",
-  "definitions": {
+  "properties": {
+    "lineEnding": {
+      "description": "The kind of line ending.",
+      "type": "string",
+      "default": "lf",
+      "oneOf": [{
+        "const": "lf",
+        "description": "Line feed."
+      }, {
+        "const": "crlf",
+        "description": "Carriage return, line feed."
+      }, {
+        "const": "cr",
+        "description": "Carriage return."
+      }]
+    },
     "indentWidth": {
       "description": "The number of characters for an indent.",
       "default": 2,
@@ -25,41 +40,6 @@
       "default": 80,
       "type": "number"
     },
-    "quoteStyle": {
-      "description": "The type of quote used when representing string literals.",
-      "type": "string",
-      "default": "double",
-      "oneOf": [{
-        "const": "double",
-        "description": "Use double quotes."
-      }, {
-        "const": "single",
-        "description": "Use single quotes"
-      }]
-    }
-  },
-  "properties": {
-    "lineEnding": {
-      "description": "The kind of line ending.",
-      "type": "string",
-      "default": "lf",
-      "oneOf": [{
-        "const": "lf",
-        "description": "Line feed."
-      }, {
-        "const": "crlf",
-        "description": "Carriage return, line feed."
-      }, {
-        "const": "cr",
-        "description": "Carriage return."
-      }]
-    },
-    "indentWidth": {
-      "$ref": "#/definitions/indentWidth"
-    },
-    "indentStyle": {
-      "$ref": "#/definitions/indentStyle"
-    },
     "semicolons": {
       "description": "Whether to use semicolons.",
       "type": "string",
@@ -72,79 +52,56 @@
         "description": "Semicolons are added only in places where it's needed, to protect from ASI."
       }]
     },
-    "lineWidth": {
-      "$ref": "#/definitions/lineWidth"
-    },
-    "css.enabled": {
-      "description": "Enable css formatting.",
-      "default": false,
-      "type": "boolean"
-    },
-    "css.indentWidth": {
-      "$ref": "#/definitions/indentWidth"
-    },
-    "css.lineWidth": {
-      "$ref": "#/definitions/lineWidth"
-    },
-    "css.quoteStyle": {
-      "$ref": "#/definitions/quoteStyle"
-    },
-    "css.indentStyle": {
-      "$ref": "#/definitions/indentStyle"
-    },
-    "graphql.enabled": {
-      "description": "Enable graphql formatting.",
-      "default": false,
-      "type": "boolean"
-    },
-    "graphql.indentWidth": {
-      "$ref": "#/definitions/indentWidth"
-    },
-    "graphql.lineWidth": {
-      "$ref": "#/definitions/lineWidth"
-    },
-    "graphql.quoteStyle": {
-      "$ref": "#/definitions/quoteStyle"
-    },
-    "graphql.indentStyle": {
-      "$ref": "#/definitions/indentStyle"
-    },
-    "graphql.bracketSpacing": {
-      "description": "Surround the inner contents of some braces with spaces.",
-      "default": true,
-      "type": "boolean"
-    },
-    "javascript.indentStyle": {
-      "$ref": "#/definitions/indentStyle"
-    },
-    "javascript.lineWidth": {
-      "$ref": "#/definitions/lineWidth"
-    },
-    "javascript.indentWidth": {
-      "$ref": "#/definitions/indentWidth"
-    },
-    "javascript.quoteStyle": {
-      "$ref": "#/definitions/quoteStyle"
-    },
-    "javascript.bracketSpacing": {
-      "description": "Surround the inner contents of some braces with spaces.",
-      "default": true,
-      "type": "boolean"
-    },
-    "json.indentStyle": {
-      "$ref": "#/definitions/indentStyle"
-    },
-    "json.lineWidth": {
-      "$ref": "#/definitions/lineWidth"
-    },
-    "json.indentWidth": {
-      "$ref": "#/definitions/indentWidth"
-    },
     "quoteStyle": {
-      "$ref": "#/definitions/quoteStyle"
+      "description": "The type of quote used when representing string literals.",
+      "type": "string",
+      "default": "double",
+      "oneOf": [{
+        "const": "double",
+        "description": "Use double quotes."
+      }, {
+        "const": "single",
+        "description": "Use single quotes."
+      }]
     },
     "jsxQuoteStyle": {
-      "$ref": "#/definitions/quoteStyle"
+      "description": "The type of quote used in JSX attributes.",
+      "type": "string",
+      "default": "double",
+      "oneOf": [{
+        "const": "double",
+        "description": "Use double quotes."
+      }, {
+        "const": "single",
+        "description": "Use single quotes."
+      }]
+    },
+    "quoteProperties": {
+      "description": "Whether property names inside objects should be quoted.",
+      "type": "string",
+      "default": "asNeeded",
+      "oneOf": [{
+        "const": "asNeeded",
+        "description": "Quotes when necessary."
+      }, {
+        "const": "preserve",
+        "description": "Maintains quotes on properties."
+      }, {
+        "const": "consistent",
+        "description": "All properties are quoted if any property requires quoting."
+      }]
+    },
+    "arrowParentheses": {
+      "description": "Whether to add non-necessary parentheses to arrow functions.",
+      "type": "string",
+      "default": "always",
+      "oneOf": [{
+        "const": "always",
+        "description": "Parentheses are always added."
+      }, {
+        "const": "asNeeded",
+        "description": "Parentheses are added only when necessary."
+      }]
     },
     "trailingCommas": {
       "description": "Print trailing commas wherever possible in multi-line comma-separated syntactic structures.",
@@ -161,38 +118,14 @@
         "description": "Trailing commas are never added."
       }]
     },
-    "arrowParentheses": {
-      "description": "Whether to add non-necessary parentheses to arrow functions.",
-      "type": "string",
-      "default": "always",
-      "oneOf": [{
-        "const": "always",
-        "description": "Parentheses are always added."
-      }, {
-        "const": "asNeeded",
-        "description": "Parentheses are added only when necessary."
-      }]
-    },
-    "quoteProperties": {
-      "description": "Whether property names inside objects should be quoted.",
-      "type": "string",
-      "default": "asNeeded",
-      "oneOf": [{
-        "const": "asNeeded",
-        "description": "Quotes when necessary."
-      }, {
-        "const": "preserve",
-        "description": "Maintains quotes on properties."
-      }]
+    "bracketSpacing": {
+      "description": "Surround the inner contents of some braces with spaces.",
+      "default": true,
+      "type": "boolean"
     },
     "bracketSameLine": {
       "description": "Place the last angle bracket in JSX tags on the same line as the last attribute.",
       "default": false,
-      "type": "boolean"
-    },
-    "bracketSpacing": {
-      "description": "Surround the inner contents of some braces with spaces.",
-      "default": true,
       "type": "boolean"
     }
   }

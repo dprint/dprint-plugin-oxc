@@ -1,5 +1,5 @@
-~~ javascript.indentStyle: space, javascript.indentSize: 4, javascript.lineWidth: 20, json.indentStyle: tab, json.indentSize: 8, json.lineWidth: 1000 ~~
-== test json ==
+~~ indentStyle: space, indentWidth: 4, lineWidth: 20 ~~
+== test ==
 const test = {
   "other": 5, "asdf": ["asdfasdfasdfasdfasdfasdfasdfasdf", 1212]}
 

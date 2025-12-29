@@ -1,14 +1,14 @@
-# @dprint/biome
+# @dprint/oxc
 
-npm distribution of [dprint-plugin-biome](https://github.com/dprint/dprint-plugin-biome) which is an adapter plugin for [Biome](https://github.com/biomejs/biome).
+npm distribution of [dprint-plugin-oxc](https://github.com/dprint/dprint-plugin-oxc) which is an adapter plugin for [Oxc](https://github.com/oxc-project/oxc).
 
-Use this with [@dprint/formatter](https://github.com/dprint/js-formatter) or just use @dprint/formatter and download the [dprint-plugin-biome Wasm file](https://github.com/dprint/dprint-plugin-biome/releases).
+Use this with [@dprint/formatter](https://github.com/dprint/js-formatter) or just use @dprint/formatter and download the [dprint-plugin-oxc Wasm file](https://github.com/dprint/dprint-plugin-oxc/releases).
 
 ## Example
 
 ```ts
-import { getBuffer } from "@dprint/biome";
 import { createFromBuffer } from "@dprint/formatter";
+import { getBuffer } from "@dprint/oxc";
 
 const formatter = createFromBuffer(getBuffer());
 
