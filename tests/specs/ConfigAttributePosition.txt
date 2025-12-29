@@ -1,0 +1,21 @@
+-- file.tsx --
+~~ attributePosition: multiline, indentStyle: space ~~
+== should place each attribute on its own line ==
+const test = <div one="1" two="2" three="3" />;
+const test2 = <Component foo="bar" baz={123} onClick={handler} />;
+
+[expect]
+const test = (
+  <div
+    one="1"
+    two="2"
+    three="3"
+  />
+);
+const test2 = (
+  <Component
+    foo="bar"
+    baz={123}
+    onClick={handler}
+  />
+);

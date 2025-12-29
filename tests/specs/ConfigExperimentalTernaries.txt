@@ -1,0 +1,10 @@
+~~ experimentalTernaries: true, indentStyle: space, lineWidth: 40 ~~
+== should use curious ternary formatting ==
+const result = condition ? valueIfTrue : valueIfFalse;
+const nested = a ? b : c ? d : e;
+
+[expect]
+const result = condition
+  ? valueIfTrue
+  : valueIfFalse;
+const nested = a ? b : c ? d : e;

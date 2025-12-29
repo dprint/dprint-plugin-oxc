@@ -47,7 +47,12 @@ pub enum QuoteProperties {
   Consistent,
 }
 
-generate_str_to_from![QuoteProperties, [AsNeeded, "asNeeded"], [Preserve, "preserve"], [Consistent, "consistent"]];
+generate_str_to_from![
+  QuoteProperties,
+  [AsNeeded, "asNeeded"],
+  [Preserve, "preserve"],
+  [Consistent, "consistent"]
+];
 
 #[derive(Clone, PartialEq, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -68,6 +73,70 @@ pub enum TrailingCommas {
 
 generate_str_to_from![TrailingCommas, [All, "all"], [Es5, "es5"], [None, "none"]];
 
+#[derive(Clone, PartialEq, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum AttributePosition {
+  Auto,
+  Multiline,
+}
+
+generate_str_to_from![AttributePosition, [Auto, "auto"], [Multiline, "multiline"]];
+
+#[derive(Clone, PartialEq, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Expand {
+  Auto,
+  Always,
+  Never,
+}
+
+generate_str_to_from![Expand, [Auto, "auto"], [Always, "always"], [Never, "never"]];
+
+#[derive(Clone, PartialEq, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum EmbeddedLanguageFormatting {
+  Auto,
+  Off,
+}
+
+generate_str_to_from![EmbeddedLanguageFormatting, [Auto, "auto"], [Off, "off"]];
+
+#[derive(Clone, PartialEq, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum OperatorPosition {
+  Start,
+  End,
+}
+
+generate_str_to_from![OperatorPosition, [Start, "start"], [End, "end"]];
+
+#[derive(Clone, PartialEq, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum SortOrder {
+  Asc,
+  Desc,
+}
+
+generate_str_to_from![SortOrder, [Asc, "asc"], [Desc, "desc"]];
+
+#[derive(Default, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SortImportsOptions {
+  #[serde(default)]
+  pub partition_by_newline: bool,
+  #[serde(default)]
+  pub partition_by_comment: bool,
+  #[serde(default)]
+  pub sort_side_effects: bool,
+  pub order: Option<SortOrder>,
+  pub ignore_case: Option<bool>,
+  pub newlines_between: Option<bool>,
+  #[serde(default)]
+  pub internal_pattern: Vec<String>,
+  #[serde(default)]
+  pub groups: Vec<Vec<String>>,
+}
+
 #[derive(Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Configuration {
@@ -83,4 +152,10 @@ pub struct Configuration {
   pub trailing_commas: Option<TrailingCommas>,
   pub bracket_spacing: Option<bool>,
   pub bracket_same_line: Option<bool>,
+  pub attribute_position: Option<AttributePosition>,
+  pub expand: Option<Expand>,
+  pub embedded_language_formatting: Option<EmbeddedLanguageFormatting>,
+  pub experimental_operator_position: Option<OperatorPosition>,
+  pub experimental_ternaries: Option<bool>,
+  pub experimental_sort_imports: Option<SortImportsOptions>,
 }

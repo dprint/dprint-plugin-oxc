@@ -1,0 +1,15 @@
+~~ expand: never, indentStyle: space ~~
+== should never expand objects and arrays ==
+const obj = {
+  a: 1,
+  b: 2
+};
+const arr = [
+  1,
+  2,
+  3
+];
+
+[expect]
+const obj = { a: 1, b: 2 };
+const arr = [1, 2, 3];

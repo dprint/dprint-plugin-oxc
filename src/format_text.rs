@@ -2,15 +2,21 @@ use anyhow::Result;
 use anyhow::bail;
 use oxc_allocator::Allocator;
 use oxc_formatter::ArrowParentheses;
+use oxc_formatter::AttributePosition;
+use oxc_formatter::EmbeddedLanguageFormatting;
+use oxc_formatter::Expand;
 use oxc_formatter::FormatOptions;
 use oxc_formatter::Formatter;
 use oxc_formatter::IndentStyle;
 use oxc_formatter::IndentWidth;
 use oxc_formatter::LineEnding;
 use oxc_formatter::LineWidth;
+use oxc_formatter::OperatorPosition;
 use oxc_formatter::QuoteProperties;
 use oxc_formatter::QuoteStyle;
 use oxc_formatter::Semicolons;
+use oxc_formatter::SortImportsOptions;
+use oxc_formatter::SortOrder;
 use oxc_formatter::TrailingCommas;
 use oxc_parser::ParseOptions;
 use oxc_parser::Parser;
@@ -26,7 +32,10 @@ pub fn format_text(file_path: &Path, input_text: &str, config: &Configuration) -
   };
 
   let allocator = Allocator::default();
-  let parse_options = ParseOptions { preserve_parens: false, ..Default::default() };
+  let parse_options = ParseOptions {
+    preserve_parens: false,
+    ..Default::default()
+  };
   let parsed = Parser::new(&allocator, input_text, source_type)
     .with_options(parse_options)
     .parse();
@@ -71,17 +80,15 @@ fn build_format_options(config: &Configuration) -> FormatOptions {
     };
   }
 
-  if let Some(value) = config.indent_width {
-    if let Ok(width) = IndentWidth::try_from(value) {
+  if let Some(value) = config.indent_width
+    && let Ok(width) = IndentWidth::try_from(value) {
       options.indent_width = width;
     }
-  }
 
-  if let Some(value) = config.line_width {
-    if let Ok(width) = LineWidth::try_from(value) {
+  if let Some(value) = config.line_width
+    && let Ok(width) = LineWidth::try_from(value) {
       options.line_width = width;
     }
-  }
 
   if let Some(semicolons) = config.semicolons {
     options.semicolons = match semicolons {
@@ -133,6 +140,58 @@ fn build_format_options(config: &Configuration) -> FormatOptions {
 
   if let Some(bracket_same_line) = config.bracket_same_line {
     options.bracket_same_line = bracket_same_line.into();
+  }
+
+  if let Some(attribute_position) = config.attribute_position {
+    options.attribute_position = match attribute_position {
+      crate::configuration::AttributePosition::Auto => AttributePosition::Auto,
+      crate::configuration::AttributePosition::Multiline => AttributePosition::Multiline,
+    };
+  }
+
+  if let Some(expand) = config.expand {
+    options.expand = match expand {
+      crate::configuration::Expand::Auto => Expand::Auto,
+      crate::configuration::Expand::Always => Expand::Always,
+      crate::configuration::Expand::Never => Expand::Never,
+    };
+  }
+
+  if let Some(embedded_language_formatting) = config.embedded_language_formatting {
+    options.embedded_language_formatting = match embedded_language_formatting {
+      crate::configuration::EmbeddedLanguageFormatting::Auto => EmbeddedLanguageFormatting::Auto,
+      crate::configuration::EmbeddedLanguageFormatting::Off => EmbeddedLanguageFormatting::Off,
+    };
+  }
+
+  if let Some(operator_position) = config.experimental_operator_position {
+    options.experimental_operator_position = match operator_position {
+      crate::configuration::OperatorPosition::Start => OperatorPosition::Start,
+      crate::configuration::OperatorPosition::End => OperatorPosition::End,
+    };
+  }
+
+  if let Some(experimental_ternaries) = config.experimental_ternaries {
+    options.experimental_ternaries = experimental_ternaries;
+  }
+
+  if let Some(ref sort_imports) = config.experimental_sort_imports {
+    options.experimental_sort_imports = Some(SortImportsOptions {
+      partition_by_newline: sort_imports.partition_by_newline,
+      partition_by_comment: sort_imports.partition_by_comment,
+      sort_side_effects: sort_imports.sort_side_effects,
+      order: sort_imports
+        .order
+        .map(|o| match o {
+          crate::configuration::SortOrder::Asc => SortOrder::Asc,
+          crate::configuration::SortOrder::Desc => SortOrder::Desc,
+        })
+        .unwrap_or_default(),
+      ignore_case: sort_imports.ignore_case.unwrap_or(true),
+      newlines_between: sort_imports.newlines_between.unwrap_or(true),
+      internal_pattern: sort_imports.internal_pattern.clone(),
+      groups: sort_imports.groups.clone(),
+    });
   }
 
   options
