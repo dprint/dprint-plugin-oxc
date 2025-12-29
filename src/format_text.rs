@@ -80,17 +80,15 @@ fn build_format_options(config: &Configuration) -> FormatOptions {
     };
   }
 
-  if let Some(value) = config.indent_width {
-    if let Ok(width) = IndentWidth::try_from(value) {
+  if let Some(value) = config.indent_width
+    && let Ok(width) = IndentWidth::try_from(value) {
       options.indent_width = width;
     }
-  }
 
-  if let Some(value) = config.line_width {
-    if let Ok(width) = LineWidth::try_from(value) {
+  if let Some(value) = config.line_width
+    && let Ok(width) = LineWidth::try_from(value) {
       options.line_width = width;
     }
-  }
 
   if let Some(semicolons) = config.semicolons {
     options.semicolons = match semicolons {
