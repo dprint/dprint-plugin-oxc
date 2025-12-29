@@ -32,7 +32,10 @@ pub fn format_text(file_path: &Path, input_text: &str, config: &Configuration) -
   };
 
   let allocator = Allocator::default();
-  let parse_options = ParseOptions { preserve_parens: false, ..Default::default() };
+  let parse_options = ParseOptions {
+    preserve_parens: false,
+    ..Default::default()
+  };
   let parsed = Parser::new(&allocator, input_text, source_type)
     .with_options(parse_options)
     .parse();
@@ -179,10 +182,13 @@ fn build_format_options(config: &Configuration) -> FormatOptions {
       partition_by_newline: sort_imports.partition_by_newline,
       partition_by_comment: sort_imports.partition_by_comment,
       sort_side_effects: sort_imports.sort_side_effects,
-      order: sort_imports.order.map(|o| match o {
-        crate::configuration::SortOrder::Asc => SortOrder::Asc,
-        crate::configuration::SortOrder::Desc => SortOrder::Desc,
-      }).unwrap_or_default(),
+      order: sort_imports
+        .order
+        .map(|o| match o {
+          crate::configuration::SortOrder::Asc => SortOrder::Asc,
+          crate::configuration::SortOrder::Desc => SortOrder::Desc,
+        })
+        .unwrap_or_default(),
       ignore_case: sort_imports.ignore_case.unwrap_or(true),
       newlines_between: sort_imports.newlines_between.unwrap_or(true),
       internal_pattern: sort_imports.internal_pattern.clone(),

@@ -47,7 +47,12 @@ pub enum QuoteProperties {
   Consistent,
 }
 
-generate_str_to_from![QuoteProperties, [AsNeeded, "asNeeded"], [Preserve, "preserve"], [Consistent, "consistent"]];
+generate_str_to_from![
+  QuoteProperties,
+  [AsNeeded, "asNeeded"],
+  [Preserve, "preserve"],
+  [Consistent, "consistent"]
+];
 
 #[derive(Clone, PartialEq, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
