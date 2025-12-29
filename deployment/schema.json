@@ -127,6 +127,124 @@
       "description": "Place the last angle bracket in JSX tags on the same line as the last attribute.",
       "default": false,
       "type": "boolean"
+    },
+    "attributePosition": {
+      "description": "How JSX/TSX attributes are positioned.",
+      "type": "string",
+      "default": "auto",
+      "oneOf": [{
+        "const": "auto",
+        "description": "Attributes are automatically positioned."
+      }, {
+        "const": "multiline",
+        "description": "Each attribute is placed on its own line."
+      }]
+    },
+    "expand": {
+      "description": "Whether to expand object and array literals to multiple lines.",
+      "type": "string",
+      "default": "auto",
+      "oneOf": [{
+        "const": "auto",
+        "description": "Objects are expanded when the first property has a leading newline. Arrays are always collapsed unless they contain a newline."
+      }, {
+        "const": "always",
+        "description": "Objects and arrays are always expanded."
+      }, {
+        "const": "never",
+        "description": "Objects and arrays are never expanded, if they are shorter than the line width."
+      }]
+    },
+    "embeddedLanguageFormatting": {
+      "description": "Enable formatting for embedded languages (e.g., CSS, SQL, GraphQL) within template literals.",
+      "type": "string",
+      "default": "auto",
+      "oneOf": [{
+        "const": "auto",
+        "description": "Enable formatting for embedded languages."
+      }, {
+        "const": "off",
+        "description": "Disable formatting for embedded languages."
+      }]
+    },
+    "experimentalOperatorPosition": {
+      "description": "[EXPERIMENTAL - NOT FULLY SUPPORTED] Controls the position of operators in binary expressions when they wrap lines.",
+      "type": "string",
+      "default": "end",
+      "oneOf": [{
+        "const": "start",
+        "description": "Places the operator at the beginning of the next line."
+      }, {
+        "const": "end",
+        "description": "Places the operator at the end of the current line."
+      }]
+    },
+    "experimentalTernaries": {
+      "description": "[EXPERIMENTAL - NOT FULLY SUPPORTED] Try prettier's new ternary formatting before it becomes the default behavior.",
+      "type": "boolean",
+      "default": false
+    },
+    "experimentalSortImports": {
+      "description": "[EXPERIMENTAL] Sort import statements. When set, enables import sorting with the specified options.",
+      "type": "object",
+      "properties": {
+        "partitionByNewline": {
+          "description": "Partition imports by newlines.",
+          "type": "boolean",
+          "default": false
+        },
+        "partitionByComment": {
+          "description": "Partition imports by comments.",
+          "type": "boolean",
+          "default": false
+        },
+        "sortSideEffects": {
+          "description": "Sort side effects imports.",
+          "type": "boolean",
+          "default": false
+        },
+        "order": {
+          "description": "Sort order (ascending or descending).",
+          "type": "string",
+          "default": "asc",
+          "oneOf": [{
+            "const": "asc",
+            "description": "Sort in ascending order (A-Z)."
+          }, {
+            "const": "desc",
+            "description": "Sort in descending order (Z-A)."
+          }]
+        },
+        "ignoreCase": {
+          "description": "Ignore case when sorting.",
+          "type": "boolean",
+          "default": true
+        },
+        "newlinesBetween": {
+          "description": "Whether to insert blank lines between different import groups.",
+          "type": "boolean",
+          "default": true
+        },
+        "internalPattern": {
+          "description": "Patterns to identify internal imports.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ["~/", "@/"]
+        },
+        "groups": {
+          "description": "Custom grouping of imports. Each inner array represents a group.",
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "default": []
+        }
+      }
     }
   }
 }

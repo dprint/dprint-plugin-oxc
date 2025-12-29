@@ -1,6 +1,8 @@
 use super::Configuration;
 use super::IndentStyle;
 use super::LineEnding;
+use super::SortImportsOptions;
+use super::SortOrder;
 use dprint_core::configuration::*;
 
 /// Resolves configuration from a collection of key value strings.
@@ -66,6 +68,12 @@ pub fn resolve_config(
       .or_else(|| get_nullable_value(&mut config, "trailingComma", &mut diagnostics)),
     bracket_spacing: get_nullable_value(&mut config, "bracketSpacing", &mut diagnostics),
     bracket_same_line: get_nullable_value(&mut config, "bracketSameLine", &mut diagnostics),
+    attribute_position: get_nullable_value(&mut config, "attributePosition", &mut diagnostics),
+    expand: get_nullable_value(&mut config, "expand", &mut diagnostics),
+    embedded_language_formatting: get_nullable_value(&mut config, "embeddedLanguageFormatting", &mut diagnostics),
+    experimental_operator_position: get_nullable_value(&mut config, "experimentalOperatorPosition", &mut diagnostics),
+    experimental_ternaries: get_nullable_value(&mut config, "experimentalTernaries", &mut diagnostics),
+    experimental_sort_imports: resolve_sort_imports_options(&mut config, &mut diagnostics),
   };
 
   diagnostics.extend(get_unknown_property_diagnostics(config));
@@ -74,4 +82,81 @@ pub fn resolve_config(
     config: resolved_config,
     diagnostics,
   }
+}
+
+fn resolve_sort_imports_options(
+  config: &mut ConfigKeyMap,
+  diagnostics: &mut Vec<ConfigurationDiagnostic>,
+) -> Option<SortImportsOptions> {
+  let value = config.shift_remove("experimentalSortImports")?;
+
+  let obj = match value.into_object() {
+    Some(obj) => obj,
+    None => {
+      diagnostics.push(ConfigurationDiagnostic {
+        property_name: "experimentalSortImports".to_string(),
+        message: "expected an object".to_string(),
+      });
+      return None;
+    }
+  };
+
+  let mut obj = obj;
+  let mut inner_diagnostics = Vec::new();
+
+  let partition_by_newline = get_nullable_value::<bool>(&mut obj, "partitionByNewline", &mut inner_diagnostics).unwrap_or(false);
+  let partition_by_comment = get_nullable_value::<bool>(&mut obj, "partitionByComment", &mut inner_diagnostics).unwrap_or(false);
+  let sort_side_effects = get_nullable_value::<bool>(&mut obj, "sortSideEffects", &mut inner_diagnostics).unwrap_or(false);
+  let order = get_nullable_value::<SortOrder>(&mut obj, "order", &mut inner_diagnostics);
+  let ignore_case = get_nullable_value::<bool>(&mut obj, "ignoreCase", &mut inner_diagnostics);
+  let newlines_between = get_nullable_value::<bool>(&mut obj, "newlinesBetween", &mut inner_diagnostics);
+
+  // Parse internalPattern as array of strings
+  let internal_pattern = obj
+    .shift_remove("internalPattern")
+    .and_then(|v| v.into_array())
+    .map(|arr| {
+      arr
+        .into_iter()
+        .filter_map(|v| v.into_string())
+        .collect::<Vec<_>>()
+    })
+    .unwrap_or_default();
+
+  // Parse groups as array of arrays of strings
+  let groups = obj
+    .shift_remove("groups")
+    .and_then(|v| v.into_array())
+    .map(|arr| {
+      arr
+        .into_iter()
+        .filter_map(|v| {
+          v.into_array().map(|inner| {
+            inner.into_iter().filter_map(|s| s.into_string()).collect::<Vec<_>>()
+          })
+        })
+        .collect::<Vec<_>>()
+    })
+    .unwrap_or_default();
+
+  // Report unknown properties within experimentalSortImports
+  for (key, _) in obj {
+    inner_diagnostics.push(ConfigurationDiagnostic {
+      property_name: format!("experimentalSortImports.{}", key),
+      message: "Unknown property".to_string(),
+    });
+  }
+
+  diagnostics.extend(inner_diagnostics);
+
+  Some(SortImportsOptions {
+    partition_by_newline,
+    partition_by_comment,
+    sort_side_effects,
+    order,
+    ignore_case,
+    newlines_between,
+    internal_pattern,
+    groups,
+  })
 }

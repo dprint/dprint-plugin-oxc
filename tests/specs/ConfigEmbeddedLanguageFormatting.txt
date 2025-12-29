@@ -1,0 +1,8 @@
+~~ embeddedLanguageFormatting: off, indentStyle: space ~~
+== should not format embedded languages when off ==
+const css = /* css */ `  .foo{color:red}  `;
+const graphql = /* GraphQL */ `{user{name}}`;
+
+[expect]
+const css = /* css */ `  .foo{color:red}  `;
+const graphql = /* GraphQL */ `{user{name}}`;

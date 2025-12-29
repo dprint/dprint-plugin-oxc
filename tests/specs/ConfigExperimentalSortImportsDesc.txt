@@ -1,0 +1,14 @@
+~~ {"experimentalSortImports": {"order": "desc"}, "indentStyle": "space"} ~~
+== should sort imports in descending order ==
+import a from "a";
+import m from "m";
+import z from "z";
+
+const x = 1;
+
+[expect]
+import z from "z";
+import m from "m";
+import a from "a";
+
+const x = 1;
