@@ -86,11 +86,10 @@ generate_str_to_from![AttributePosition, [Auto, "auto"], [Multiline, "multiline"
 #[serde(rename_all = "camelCase")]
 pub enum Expand {
   Auto,
-  Always,
   Never,
 }
 
-generate_str_to_from![Expand, [Auto, "auto"], [Always, "always"], [Never, "never"]];
+generate_str_to_from![Expand, [Auto, "auto"], [Never, "never"]];
 
 #[derive(Clone, PartialEq, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -139,6 +138,21 @@ pub struct SortImportsOptions {
 
 #[derive(Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct TailwindcssOptions {
+  pub config: Option<String>,
+  pub stylesheet: Option<String>,
+  #[serde(default)]
+  pub functions: Vec<String>,
+  #[serde(default)]
+  pub attributes: Vec<String>,
+  #[serde(default)]
+  pub preserve_whitespace: bool,
+  #[serde(default)]
+  pub preserve_duplicates: bool,
+}
+
+#[derive(Default, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Configuration {
   pub line_ending: Option<LineEnding>,
   pub indent_style: Option<IndentStyle>,
@@ -158,4 +172,5 @@ pub struct Configuration {
   pub experimental_operator_position: Option<OperatorPosition>,
   pub experimental_ternaries: Option<bool>,
   pub experimental_sort_imports: Option<SortImportsOptions>,
+  pub experimental_tailwindcss: Option<TailwindcssOptions>,
 }

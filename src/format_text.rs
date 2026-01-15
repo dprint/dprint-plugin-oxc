@@ -17,6 +17,7 @@ use oxc_formatter::QuoteStyle;
 use oxc_formatter::Semicolons;
 use oxc_formatter::SortImportsOptions;
 use oxc_formatter::SortOrder;
+use oxc_formatter::TailwindcssOptions;
 use oxc_formatter::TrailingCommas;
 use oxc_parser::ParseOptions;
 use oxc_parser::Parser;
@@ -152,7 +153,6 @@ fn build_format_options(config: &Configuration) -> FormatOptions {
   if let Some(expand) = config.expand {
     options.expand = match expand {
       crate::configuration::Expand::Auto => Expand::Auto,
-      crate::configuration::Expand::Always => Expand::Always,
       crate::configuration::Expand::Never => Expand::Never,
     };
   }
@@ -191,6 +191,17 @@ fn build_format_options(config: &Configuration) -> FormatOptions {
       newlines_between: sort_imports.newlines_between.unwrap_or(true),
       internal_pattern: sort_imports.internal_pattern.clone(),
       groups: sort_imports.groups.clone(),
+    });
+  }
+
+  if let Some(ref tailwindcss) = config.experimental_tailwindcss {
+    options.experimental_tailwindcss = Some(TailwindcssOptions {
+      config: tailwindcss.config.clone(),
+      stylesheet: tailwindcss.stylesheet.clone(),
+      functions: tailwindcss.functions.clone(),
+      attributes: tailwindcss.attributes.clone(),
+      preserve_whitespace: tailwindcss.preserve_whitespace,
+      preserve_duplicates: tailwindcss.preserve_duplicates,
     });
   }
 

@@ -1,0 +1,13 @@
+-- file.tsx --
+~~ {"experimentalTailwindcss": {}, "indentStyle": "space"} ~~
+== should accept tailwindcss config ==
+const Component = () => <div className="flex items-center p-4">Hello</div>;
+
+[expect]
+const Component = () => <div className="flex items-center p-4">Hello</div>;
+
+== should format jsx with tailwindcss enabled ==
+const Component = () => <div className="flex items-center p-4"  >Hello</div>;
+
+[expect]
+const Component = () => <div className="flex items-center p-4">Hello</div>;

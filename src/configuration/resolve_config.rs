@@ -3,6 +3,7 @@ use super::IndentStyle;
 use super::LineEnding;
 use super::SortImportsOptions;
 use super::SortOrder;
+use super::TailwindcssOptions;
 use dprint_core::configuration::*;
 
 /// Resolves configuration from a collection of key value strings.
@@ -74,6 +75,7 @@ pub fn resolve_config(
     experimental_operator_position: get_nullable_value(&mut config, "experimentalOperatorPosition", &mut diagnostics),
     experimental_ternaries: get_nullable_value(&mut config, "experimentalTernaries", &mut diagnostics),
     experimental_sort_imports: resolve_sort_imports_options(&mut config, &mut diagnostics),
+    experimental_tailwindcss: resolve_tailwindcss_options(&mut config, &mut diagnostics),
   };
 
   diagnostics.extend(get_unknown_property_diagnostics(config));
@@ -155,5 +157,66 @@ fn resolve_sort_imports_options(
     newlines_between,
     internal_pattern,
     groups,
+  })
+}
+
+fn resolve_tailwindcss_options(
+  config: &mut ConfigKeyMap,
+  diagnostics: &mut Vec<ConfigurationDiagnostic>,
+) -> Option<TailwindcssOptions> {
+  let value = config.shift_remove("experimentalTailwindcss")?;
+
+  let obj = match value.into_object() {
+    Some(obj) => obj,
+    None => {
+      diagnostics.push(ConfigurationDiagnostic {
+        property_name: "experimentalTailwindcss".to_string(),
+        message: "expected an object".to_string(),
+      });
+      return None;
+    }
+  };
+
+  let mut obj = obj;
+  let mut inner_diagnostics = Vec::new();
+
+  let config_path = get_nullable_value::<String>(&mut obj, "config", &mut inner_diagnostics);
+  let stylesheet = get_nullable_value::<String>(&mut obj, "stylesheet", &mut inner_diagnostics);
+  let preserve_whitespace =
+    get_nullable_value::<bool>(&mut obj, "preserveWhitespace", &mut inner_diagnostics).unwrap_or(false);
+  let preserve_duplicates =
+    get_nullable_value::<bool>(&mut obj, "preserveDuplicates", &mut inner_diagnostics).unwrap_or(false);
+
+  // Parse functions as array of strings
+  let functions = obj
+    .shift_remove("functions")
+    .and_then(|v| v.into_array())
+    .map(|arr| arr.into_iter().filter_map(|v| v.into_string()).collect::<Vec<_>>())
+    .unwrap_or_default();
+
+  // Parse attributes as array of strings
+  let attributes = obj
+    .shift_remove("attributes")
+    .and_then(|v| v.into_array())
+    .map(|arr| arr.into_iter().filter_map(|v| v.into_string()).collect::<Vec<_>>())
+    .unwrap_or_default();
+
+  // Report unknown properties within experimentalTailwindcss
+  for (key, _) in obj {
+    inner_diagnostics.push(ConfigurationDiagnostic {
+      property_name: format!("experimentalTailwindcss.{}", key),
+      message: "Unknown property".to_string(),
+    });
+  }
+
+  diagnostics.extend(inner_diagnostics);
+
+  Some(TailwindcssOptions {
+    config: config_path,
+    stylesheet,
+    functions,
+    attributes,
+    preserve_whitespace,
+    preserve_duplicates,
   })
 }
