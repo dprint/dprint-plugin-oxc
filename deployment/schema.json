@@ -148,9 +148,6 @@
         "const": "auto",
         "description": "Objects are expanded when the first property has a leading newline. Arrays are always collapsed unless they contain a newline."
       }, {
-        "const": "always",
-        "description": "Objects and arrays are always expanded."
-      }, {
         "const": "never",
         "description": "Objects and arrays are never expanded, if they are shorter than the line width."
       }]
@@ -243,6 +240,46 @@
             }
           },
           "default": []
+        }
+      }
+    },
+    "experimentalTailwindcss": {
+      "description": "[EXPERIMENTAL] Enable Tailwind CSS class sorting. When set, enables class sorting with the specified options.",
+      "type": "object",
+      "properties": {
+        "config": {
+          "description": "Path to the Tailwind CSS config file.",
+          "type": "string"
+        },
+        "stylesheet": {
+          "description": "Path to a custom stylesheet.",
+          "type": "string"
+        },
+        "functions": {
+          "description": "Custom functions to sort classes in.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "attributes": {
+          "description": "Custom attributes to sort classes in.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "preserveWhitespace": {
+          "description": "Preserve whitespace in class strings.",
+          "type": "boolean",
+          "default": false
+        },
+        "preserveDuplicates": {
+          "description": "Preserve duplicate class names.",
+          "type": "boolean",
+          "default": false
         }
       }
     }
