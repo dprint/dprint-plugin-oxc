@@ -15,6 +15,7 @@ use oxc_formatter::OperatorPosition;
 use oxc_formatter::QuoteProperties;
 use oxc_formatter::QuoteStyle;
 use oxc_formatter::Semicolons;
+use oxc_formatter::CustomGroupDefinition;
 use oxc_formatter::SortImportsOptions;
 use oxc_formatter::SortOrder;
 use oxc_formatter::TailwindcssOptions;
@@ -191,6 +192,14 @@ fn build_format_options(config: &Configuration) -> FormatOptions {
       newlines_between: sort_imports.newlines_between.unwrap_or(true),
       internal_pattern: sort_imports.internal_pattern.clone(),
       groups: sort_imports.groups.clone(),
+      custom_groups: sort_imports
+        .custom_groups
+        .iter()
+        .map(|g| CustomGroupDefinition {
+          group_name: g.group_name.clone(),
+          element_name_pattern: g.element_name_pattern.clone(),
+        })
+        .collect(),
     });
   }
 

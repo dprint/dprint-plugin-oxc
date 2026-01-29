@@ -134,6 +134,17 @@ pub struct SortImportsOptions {
   pub internal_pattern: Vec<String>,
   #[serde(default)]
   pub groups: Vec<Vec<String>>,
+  #[serde(default)]
+  pub custom_groups: Vec<crate::configuration::CustomGroupDefinition>,
+}
+
+#[derive(Default, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CustomGroupDefinition {
+  #[serde(default)]
+  pub group_name: String,
+  #[serde(default)]
+  pub element_name_pattern: Vec<String>,
 }
 
 #[derive(Default, Clone, Serialize, Deserialize)]
