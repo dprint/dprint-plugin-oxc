@@ -1,4 +1,5 @@
 use super::Configuration;
+use super::CustomGroupDefinition;
 use super::IndentStyle;
 use super::LineEnding;
 use super::SortImportsOptions;
@@ -138,6 +139,30 @@ fn resolve_sort_imports_options(
     })
     .unwrap_or_default();
 
+  // Parse customGroups as array of objects with groupName and elementNamePattern
+  let custom_groups = obj
+    .shift_remove("customGroups")
+    .and_then(|v| v.into_array())
+    .map(|arr| {
+      arr
+        .into_iter()
+        .filter_map(|v| {
+          let mut obj = v.into_object()?;
+          let group_name = obj.shift_remove("groupName").and_then(|v| v.into_string()).unwrap_or_default();
+          let element_name_pattern = obj
+            .shift_remove("elementNamePattern")
+            .and_then(|v| v.into_array())
+            .map(|arr| arr.into_iter().filter_map(|v| v.into_string()).collect::<Vec<_>>())
+            .unwrap_or_default();
+          Some(CustomGroupDefinition {
+            group_name,
+            element_name_pattern,
+          })
+        })
+        .collect::<Vec<_>>()
+    })
+    .unwrap_or_default();
+
   // Report unknown properties within experimentalSortImports
   for (key, _) in obj {
     inner_diagnostics.push(ConfigurationDiagnostic {
@@ -157,6 +182,7 @@ fn resolve_sort_imports_options(
     newlines_between,
     internal_pattern,
     groups,
+    custom_groups,
   })
 }
 
