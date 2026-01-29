@@ -1,0 +1,20 @@
+~~ {"experimentalSortImports": {"customGroups": [{"groupName": "react", "elementNamePattern": ["react", "react-*"]}], "groups": [["react"], ["builtin"], ["external"], ["internal"]]}, "indentStyle": "space"} ~~
+== should sort imports with custom groups ==
+import express from "express";
+import path from "path";
+import React from "react";
+import ReactDOM from "react-dom";
+import z from "z";
+
+const x = 1;
+
+[expect]
+import React from "react";
+import ReactDOM from "react-dom";
+
+import path from "path";
+
+import express from "express";
+import z from "z";
+
+const x = 1;
