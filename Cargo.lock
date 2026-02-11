@@ -24,6 +24,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a23eb6b1614318a8071c9b2521f36b424b2c83db5eb3a0fead4a6c0809af6e61"
 
 [[package]]
+name = "arrayvec"
+version = "0.7.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
+
+[[package]]
 name = "autocfg"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -160,7 +166,7 @@ dependencies = [
 
 [[package]]
 name = "dprint-plugin-oxc"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "dprint-core",
@@ -197,6 +203,15 @@ name = "equivalent"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
+
+[[package]]
+name = "fast-glob"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3d26eec0ae9682c457cb0f85de67ad417b716ae852736a5d94c2ad6e92a997c9"
+dependencies = [
+ "arrayvec",
+]
 
 [[package]]
 name = "fastrand"
@@ -353,8 +368,8 @@ dependencies = [
 
 [[package]]
 name = "oxc_allocator"
-version = "0.112.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.112.0#6114a1335e73a45d8c8baf952e696b74cb4d2bd9"
+version = "0.113.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.113.0#b4f7e7fa460ccf788e72fd6543ea8f38fc857605"
 dependencies = [
  "allocator-api2",
  "hashbrown",
@@ -364,8 +379,8 @@ dependencies = [
 
 [[package]]
 name = "oxc_ast"
-version = "0.112.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.112.0#6114a1335e73a45d8c8baf952e696b74cb4d2bd9"
+version = "0.113.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.113.0#b4f7e7fa460ccf788e72fd6543ea8f38fc857605"
 dependencies = [
  "bitflags",
  "oxc_allocator",
@@ -380,8 +395,8 @@ dependencies = [
 
 [[package]]
 name = "oxc_ast_macros"
-version = "0.112.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.112.0#6114a1335e73a45d8c8baf952e696b74cb4d2bd9"
+version = "0.113.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.113.0#b4f7e7fa460ccf788e72fd6543ea8f38fc857605"
 dependencies = [
  "phf",
  "proc-macro2",
@@ -391,13 +406,13 @@ dependencies = [
 
 [[package]]
 name = "oxc_data_structures"
-version = "0.112.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.112.0#6114a1335e73a45d8c8baf952e696b74cb4d2bd9"
+version = "0.113.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.113.0#b4f7e7fa460ccf788e72fd6543ea8f38fc857605"
 
 [[package]]
 name = "oxc_diagnostics"
-version = "0.112.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.112.0#6114a1335e73a45d8c8baf952e696b74cb4d2bd9"
+version = "0.113.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.113.0#b4f7e7fa460ccf788e72fd6543ea8f38fc857605"
 dependencies = [
  "cow-utils",
  "oxc-miette",
@@ -406,8 +421,8 @@ dependencies = [
 
 [[package]]
 name = "oxc_ecmascript"
-version = "0.112.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.112.0#6114a1335e73a45d8c8baf952e696b74cb4d2bd9"
+version = "0.113.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.113.0#b4f7e7fa460ccf788e72fd6543ea8f38fc857605"
 dependencies = [
  "cow-utils",
  "num-bigint",
@@ -421,15 +436,16 @@ dependencies = [
 
 [[package]]
 name = "oxc_estree"
-version = "0.112.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.112.0#6114a1335e73a45d8c8baf952e696b74cb4d2bd9"
+version = "0.113.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.113.0#b4f7e7fa460ccf788e72fd6543ea8f38fc857605"
 
 [[package]]
 name = "oxc_formatter"
-version = "0.27.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.112.0#6114a1335e73a45d8c8baf952e696b74cb4d2bd9"
+version = "0.29.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.113.0#b4f7e7fa460ccf788e72fd6543ea8f38fc857605"
 dependencies = [
  "cow-utils",
+ "fast-glob",
  "natord",
  "nodejs-built-in-modules",
  "oxc_allocator",
@@ -455,8 +471,8 @@ dependencies = [
 
 [[package]]
 name = "oxc_parser"
-version = "0.112.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.112.0#6114a1335e73a45d8c8baf952e696b74cb4d2bd9"
+version = "0.113.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.113.0#b4f7e7fa460ccf788e72fd6543ea8f38fc857605"
 dependencies = [
  "bitflags",
  "cow-utils",
@@ -477,8 +493,8 @@ dependencies = [
 
 [[package]]
 name = "oxc_regular_expression"
-version = "0.112.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.112.0#6114a1335e73a45d8c8baf952e696b74cb4d2bd9"
+version = "0.113.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.113.0#b4f7e7fa460ccf788e72fd6543ea8f38fc857605"
 dependencies = [
  "bitflags",
  "oxc_allocator",
@@ -492,8 +508,8 @@ dependencies = [
 
 [[package]]
 name = "oxc_span"
-version = "0.112.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.112.0#6114a1335e73a45d8c8baf952e696b74cb4d2bd9"
+version = "0.113.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.113.0#b4f7e7fa460ccf788e72fd6543ea8f38fc857605"
 dependencies = [
  "compact_str",
  "oxc-miette",
@@ -505,18 +521,19 @@ dependencies = [
 
 [[package]]
 name = "oxc_str"
-version = "0.112.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.112.0#6114a1335e73a45d8c8baf952e696b74cb4d2bd9"
+version = "0.113.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.113.0#b4f7e7fa460ccf788e72fd6543ea8f38fc857605"
 dependencies = [
  "compact_str",
+ "hashbrown",
  "oxc_allocator",
  "oxc_estree",
 ]
 
 [[package]]
 name = "oxc_syntax"
-version = "0.112.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.112.0#6114a1335e73a45d8c8baf952e696b74cb4d2bd9"
+version = "0.113.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.113.0#b4f7e7fa460ccf788e72fd6543ea8f38fc857605"
 dependencies = [
  "bitflags",
  "cow-utils",
@@ -524,7 +541,6 @@ dependencies = [
  "nonmax",
  "oxc_allocator",
  "oxc_ast_macros",
- "oxc_data_structures",
  "oxc_estree",
  "oxc_index",
  "oxc_span",
