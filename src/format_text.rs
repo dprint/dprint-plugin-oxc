@@ -15,6 +15,7 @@ use oxc_formatter::OperatorPosition;
 use oxc_formatter::QuoteProperties;
 use oxc_formatter::QuoteStyle;
 use oxc_formatter::Semicolons;
+use oxc_formatter::CustomGroupDefinition;
 use oxc_formatter::GroupEntry;
 use oxc_formatter::SortImportsOptions;
 use oxc_formatter::SortOrder;
@@ -194,7 +195,15 @@ fn build_format_options(config: &Configuration) -> FormatOptions {
       groups: sort_imports.groups.iter().map(|group| {
         group.iter().map(|s| GroupEntry::parse(s)).collect()
       }).collect(),
-      custom_groups: Vec::new(),
+      custom_groups: sort_imports
+        .custom_groups
+        .iter()
+        .map(|g| CustomGroupDefinition {
+          group_name: g.group_name.clone(),
+          element_name_pattern: g.element_name_pattern.clone(),
+          ..Default::default()
+        })
+        .collect(),
       newline_boundary_overrides: Vec::new(),
     });
   }
