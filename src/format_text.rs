@@ -16,9 +16,10 @@ use oxc_formatter::QuoteProperties;
 use oxc_formatter::QuoteStyle;
 use oxc_formatter::Semicolons;
 use oxc_formatter::CustomGroupDefinition;
+use oxc_formatter::GroupEntry;
 use oxc_formatter::SortImportsOptions;
 use oxc_formatter::SortOrder;
-use oxc_formatter::TailwindcssOptions;
+use oxc_formatter::SortTailwindcssOptions;
 use oxc_formatter::TrailingCommas;
 use oxc_parser::ParseOptions;
 use oxc_parser::Parser;
@@ -177,7 +178,7 @@ fn build_format_options(config: &Configuration) -> FormatOptions {
   }
 
   if let Some(ref sort_imports) = config.experimental_sort_imports {
-    options.experimental_sort_imports = Some(SortImportsOptions {
+    options.sort_imports = Some(SortImportsOptions {
       partition_by_newline: sort_imports.partition_by_newline,
       partition_by_comment: sort_imports.partition_by_comment,
       sort_side_effects: sort_imports.sort_side_effects,
@@ -191,20 +192,24 @@ fn build_format_options(config: &Configuration) -> FormatOptions {
       ignore_case: sort_imports.ignore_case.unwrap_or(true),
       newlines_between: sort_imports.newlines_between.unwrap_or(true),
       internal_pattern: sort_imports.internal_pattern.clone(),
-      groups: sort_imports.groups.clone(),
+      groups: sort_imports.groups.iter().map(|group| {
+        group.iter().map(|s| GroupEntry::parse(s)).collect()
+      }).collect(),
       custom_groups: sort_imports
         .custom_groups
         .iter()
         .map(|g| CustomGroupDefinition {
           group_name: g.group_name.clone(),
           element_name_pattern: g.element_name_pattern.clone(),
+          ..Default::default()
         })
         .collect(),
+      newline_boundary_overrides: Vec::new(),
     });
   }
 
   if let Some(ref tailwindcss) = config.experimental_tailwindcss {
-    options.experimental_tailwindcss = Some(TailwindcssOptions {
+    options.sort_tailwindcss = Some(SortTailwindcssOptions {
       config: tailwindcss.config.clone(),
       stylesheet: tailwindcss.stylesheet.clone(),
       functions: tailwindcss.functions.clone(),

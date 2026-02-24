@@ -17,6 +17,10 @@ if (cargoTomlVersion.tag === latestTag.tag) {
 }
 
 $.log("Found new version.");
+
+$.logStep("Updating rust-toolchain.toml...");
+await updateRustToolchain(latestTag.tag);
+
 $.logStep("Updating Cargo.toml...");
 const isPatchBump = cargoTomlVersion.version.major === latestTag.version.major
   && cargoTomlVersion.version.minor === latestTag.version.minor;
@@ -77,6 +81,37 @@ async function getLatestTag() {
 
 function tagToVersion(tag: string) {
   return semver.parse(tag.replace(/^crates_v/, ""));
+}
+
+async function updateRustToolchain(tag: string) {
+  const client = new Octokit();
+  const response = await client.rest.repos.getContent({
+    owner: "oxc-project",
+    repo: "oxc",
+    path: "rust-toolchain.toml",
+    ref: tag,
+  });
+  if (!("content" in response.data)) {
+    throw new Error("Could not fetch rust-toolchain.toml from oxc repo.");
+  }
+  const content = atob(response.data.content);
+  const match = content.match(/channel\s*=\s*"([^"]+)"/);
+  if (match == null) {
+    throw new Error("Could not find channel in oxc's rust-toolchain.toml.");
+  }
+  const oxcChannel = match[1];
+  const toolchainPath = rootDirPath.join("rust-toolchain.toml");
+  const localContent = toolchainPath.readTextSync();
+  const localMatch = localContent.match(/channel\s*=\s*"([^"]+)"/);
+  if (localMatch == null) {
+    throw new Error("Could not find channel in local rust-toolchain.toml.");
+  }
+  if (localMatch[1] !== oxcChannel) {
+    $.log(`Updating Rust toolchain: ${localMatch[1]} -> ${oxcChannel}`);
+    toolchainPath.writeTextSync(localContent.replace(localMatch[0], `channel = "${oxcChannel}"`));
+  } else {
+    $.log(`Rust toolchain already at ${oxcChannel}.`);
+  }
 }
 
 async function getGitTags(): Promise<string[]> {
