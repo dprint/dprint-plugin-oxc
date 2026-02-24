@@ -1,0 +1,17 @@
+~~ {"experimentalSortImports": {"groups": [["builtin"], ["external"], ["internal"]]}, "indentStyle": "space"} ~~
+== should sort imports into groups ==
+import express from "express";
+import path from "path";
+import z from "z";
+import a from "a";
+
+const x = 1;
+
+[expect]
+import path from "path";
+
+import a from "a";
+import express from "express";
+import z from "z";
+
+const x = 1;
