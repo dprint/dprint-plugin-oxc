@@ -270,6 +270,12 @@ mod test {
     )
     .unwrap()
     .unwrap();
-    assert_eq!(result, "const styles = formatted_tagged-css_.foo{color:red};\n");
+    assert_eq!(
+      result,
+      "const styles = css`
+  formatted_tagged-css_.foo{color:red}
+`;
+"
+    );
   }
 }
