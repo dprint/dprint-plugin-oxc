@@ -239,6 +239,8 @@ fn build_format_options(config: &Configuration) -> FormatOptions {
 
 #[cfg(test)]
 mod test {
+  use std::sync::Arc;
+
   use super::*;
 
   #[test]
@@ -249,5 +251,25 @@ mod test {
       .unwrap()
       .unwrap();
     assert_eq!(result, "const x = 1;\n");
+  }
+
+  #[test]
+  fn formats_embedded_css() {
+    let input = "const styles=css`.foo{color:red}`;";
+    let config = crate::configuration::Configuration::default();
+    let result = format_text(
+      std::path::Path::new("test.js"),
+      input,
+      &config,
+      Some(
+        ExternalCallbacks::new().with_embedded_formatter(Some(Arc::new(|language, code| {
+          // Dummy formatter for testing
+          Ok(format!("formatted_{}_{}", language, code.replace('\n', "\\n")))
+        }))),
+      ),
+    )
+    .unwrap()
+    .unwrap();
+    assert_eq!(result, "const styles = formatted_tagged-css_.foo{color:red};\n");
   }
 }

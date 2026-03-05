@@ -20,7 +20,9 @@ use dprint_core::plugins::SyncPluginHandler;
 use oxc_formatter::EmbeddedFormatterCallback;
 use oxc_formatter::ExternalCallbacks;
 
-// This is ok to do because Wasm plugins are executed on a single thread
+// This is ok to do because Wasm plugins are executed on a single thread.
+// Same pattern as used in generate_plugin_code! macro.
+// https://github.com/dprint/dprint/blob/2e839405dcf75541bb3b59978c804304fedaa581/crates/core/src/plugins/wasm/mod.rs#L89-L114
 struct WasmCallback<T>(UnsafeCell<T>);
 
 unsafe impl<T> Send for WasmCallback<T> {}
@@ -36,6 +38,20 @@ impl<T> WasmCallback<T> {
     T: FnMut(Args) -> Output,
   {
     (unsafe { &mut *self.0.get() })(args)
+  }
+}
+
+// Adapted from oxc-project/oxc
+// https://github.com/oxc-project/oxc/blob/50eb16052247694e483828b2a603ade5e410c569/apps/oxfmt/src/core/external_formatter.rs#L362-L375
+fn language_to_extension(language: &str) -> &'static str {
+  match language {
+    "tagged-css" | "styled-jsx" => "scss",
+    "tagged-graphql" => "gql", // Not used, oxc will always use format_embedded_doc
+    "tagged-html" => "html",
+    "tagged-markdown" => "md",
+    "angular-template" => "component.html", // Extension used by markup_fmt
+    "angular-styles" => "scss",
+    _ => "txt",
   }
 }
 
@@ -112,7 +128,7 @@ impl SyncPluginHandler<Configuration> for OxcPluginHandler {
         Arc<dyn Fn(&str, &str) -> Result<String, String> + Send + Sync>,
         Arc<dyn Fn(&str, &str) -> Result<String, String> + Send + Sync + 'static>,
       >(Arc::new(move |language: &str, text: &str| {
-        let file_path = format!("/tmp/embedded.{}", language);
+        let file_path = format!("/tmp/embedded.{}", language_to_extension(language));
         let request = SyncHostFormatRequest {
           file_path: Path::new(&file_path),
           file_bytes: text.as_bytes(),
@@ -123,7 +139,7 @@ impl SyncPluginHandler<Configuration> for OxcPluginHandler {
         match format_callback.call(request) {
           Ok(Some(bytes)) => String::from_utf8(bytes).map_err(|e| e.to_string()),
           Ok(None) => Ok(text.to_string()),
-          Err(e) => Err(e.to_string()),
+          Err(e) => Err(format!("Failed to format embedded {}: {:#}", language, e)),
         }
       }))
     };
