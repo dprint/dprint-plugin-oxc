@@ -66,7 +66,7 @@ pub fn format_text(
   let output = formatter
     .format_with_external_callbacks(&parsed.program, external_callbacks)
     .print()
-    .unwrap()
+    .map_err(|e| anyhow::anyhow!("Failed to print formatted output: {}", e))?
     .into_code();
 
   if output == input_text {
