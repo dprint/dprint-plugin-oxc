@@ -3,10 +3,13 @@ use anyhow::bail;
 use oxc_allocator::Allocator;
 use oxc_formatter::ArrowParentheses;
 use oxc_formatter::AttributePosition;
+use oxc_formatter::CustomGroupDefinition;
 use oxc_formatter::EmbeddedLanguageFormatting;
 use oxc_formatter::Expand;
+use oxc_formatter::ExternalCallbacks;
 use oxc_formatter::FormatOptions;
 use oxc_formatter::Formatter;
+use oxc_formatter::GroupEntry;
 use oxc_formatter::IndentStyle;
 use oxc_formatter::IndentWidth;
 use oxc_formatter::LineEnding;
@@ -15,8 +18,6 @@ use oxc_formatter::OperatorPosition;
 use oxc_formatter::QuoteProperties;
 use oxc_formatter::QuoteStyle;
 use oxc_formatter::Semicolons;
-use oxc_formatter::CustomGroupDefinition;
-use oxc_formatter::GroupEntry;
 use oxc_formatter::SortImportsOptions;
 use oxc_formatter::SortOrder;
 use oxc_formatter::SortTailwindcssOptions;
@@ -28,7 +29,12 @@ use std::path::Path;
 
 use crate::configuration::Configuration;
 
-pub fn format_text(file_path: &Path, input_text: &str, config: &Configuration) -> Result<Option<String>> {
+pub fn format_text(
+  file_path: &Path,
+  input_text: &str,
+  config: &Configuration,
+  external_callbacks: Option<ExternalCallbacks>,
+) -> Result<Option<String>> {
   let source_type = match SourceType::from_path(file_path) {
     Ok(source_type) => source_type,
     Err(_) => return Ok(None),
@@ -56,7 +62,12 @@ pub fn format_text(file_path: &Path, input_text: &str, config: &Configuration) -
 
   let options = build_format_options(config);
   let formatter = Formatter::new(&allocator, options);
-  let output = formatter.build(&parsed.program);
+
+  let output = formatter
+    .format_with_external_callbacks(&parsed.program, external_callbacks)
+    .print()
+    .map_err(|e| anyhow::anyhow!("Failed to print formatted output: {}", e))?
+    .into_code();
 
   if output == input_text {
     Ok(None)
@@ -84,14 +95,16 @@ fn build_format_options(config: &Configuration) -> FormatOptions {
   }
 
   if let Some(value) = config.indent_width
-    && let Ok(width) = IndentWidth::try_from(value) {
-      options.indent_width = width;
-    }
+    && let Ok(width) = IndentWidth::try_from(value)
+  {
+    options.indent_width = width;
+  }
 
   if let Some(value) = config.line_width
-    && let Ok(width) = LineWidth::try_from(value) {
-      options.line_width = width;
-    }
+    && let Ok(width) = LineWidth::try_from(value)
+  {
+    options.line_width = width;
+  }
 
   if let Some(semicolons) = config.semicolons {
     options.semicolons = match semicolons {
@@ -192,9 +205,11 @@ fn build_format_options(config: &Configuration) -> FormatOptions {
       ignore_case: sort_imports.ignore_case.unwrap_or(true),
       newlines_between: sort_imports.newlines_between.unwrap_or(true),
       internal_pattern: sort_imports.internal_pattern.clone(),
-      groups: sort_imports.groups.iter().map(|group| {
-        group.iter().map(|s| GroupEntry::parse(s)).collect()
-      }).collect(),
+      groups: sort_imports
+        .groups
+        .iter()
+        .map(|group| group.iter().map(|s| GroupEntry::parse(s)).collect())
+        .collect(),
       custom_groups: sort_imports
         .custom_groups
         .iter()
@@ -224,15 +239,43 @@ fn build_format_options(config: &Configuration) -> FormatOptions {
 
 #[cfg(test)]
 mod test {
+  use std::sync::Arc;
+
   use super::*;
 
   #[test]
   fn formats_basic_js() {
     let input = "const x=1";
     let config = crate::configuration::Configuration::default();
-    let result = format_text(std::path::Path::new("test.js"), input, &config)
+    let result = format_text(std::path::Path::new("test.js"), input, &config, None)
       .unwrap()
       .unwrap();
     assert_eq!(result, "const x = 1;\n");
+  }
+
+  #[test]
+  fn formats_embedded_css() {
+    let input = "const styles=css`.foo{color:red}`;";
+    let config = crate::configuration::Configuration::default();
+    let result = format_text(
+      std::path::Path::new("test.js"),
+      input,
+      &config,
+      Some(
+        ExternalCallbacks::new().with_embedded_formatter(Some(Arc::new(|language, code| {
+          // Dummy formatter for testing
+          Ok(format!("formatted_{}_{}", language, code.replace('\n', "\\n")))
+        }))),
+      ),
+    )
+    .unwrap()
+    .unwrap();
+    assert_eq!(
+      result,
+      "const styles = css`
+  formatted_tagged-css_.foo{color:red}
+`;
+"
+    );
   }
 }

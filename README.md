@@ -4,6 +4,16 @@
 
 Adapter for [Oxc](https://github.com/oxc-project/oxc) for use as a formatting plugin in [dprint](https://github.com/dprint/dprint).
 
+This formatter will delegate formatting of embedded languages to other dprint plugins:
+
+- `css` and `styled` tagged template literals will be formatted by [Malva](https://dprint.dev/plugins/malva/)
+- `html` tagged template literals will be formatted by [Markup_fmt](https://dprint.dev/plugins/markup_fmt/)
+- `md` and `markdown` tagged template literals will be formatted by [Markdown Code Formatter](https://dprint.dev/plugins/markdown/)
+
+Unfortunately, GraphQL tagged template literals cannot be supported for now because oxc_formatter uses a different API for GraphQL documents that cannot be delegated to string-based formatters.
+
+You can disable embedded language formatting by setting `embeddedLanguageFormatting` to `"off"` in the plugin's configuration.
+
 ## Install
 
 [Install](https://dprint.dev/install/) and [setup](https://dprint.dev/setup/) dprint.

@@ -30,7 +30,7 @@ fn test_specs() {
         let config_result = resolve_config(spec_config, &global_config);
         ensure_no_diagnostics(&config_result.diagnostics);
 
-        format_text(file_path, &file_text, &config_result.config)
+        format_text(file_path, &file_text, &config_result.config, None)
       })
     },
     Arc::new(move |_file_path, _file_text, _spec_config| panic!("Plugin does not support dprint-core tracing.")),
@@ -40,7 +40,7 @@ fn test_specs() {
 #[test]
 fn should_fail_on_parse_error_js() {
   let config = Configuration::default();
-  let err = format_text(&PathBuf::from("./file.ts"), "const t string = 5;", &config).unwrap_err();
+  let err = format_text(&PathBuf::from("./file.ts"), "const t string = 5;", &config, None).unwrap_err();
   // Just verify that it returns an error for invalid syntax
   assert!(!err.to_string().is_empty());
 }
