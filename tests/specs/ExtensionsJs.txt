@@ -1,0 +1,6 @@
+-- file.js --
+== should format js ==
+const   x=1
+
+[expect]
+const x = 1;

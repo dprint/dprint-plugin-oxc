@@ -1,0 +1,10 @@
+~~ indentStyle: space, indentWidth: 4 ~~
+== should indent with 4 spaces ==
+function foo() {
+const x = 1;
+}
+
+[expect]
+function foo() {
+    const x = 1;
+}

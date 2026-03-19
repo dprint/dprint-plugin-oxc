@@ -1,0 +1,6 @@
+-- file.mjs --
+== should format mjs ==
+const   x=1
+
+[expect]
+const x = 1;

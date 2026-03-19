@@ -148,7 +148,10 @@ fn resolve_sort_imports_options(
         .into_iter()
         .filter_map(|v| {
           let mut obj = v.into_object()?;
-          let group_name = obj.shift_remove("groupName").and_then(|v| v.into_string()).unwrap_or_default();
+          let group_name = obj
+            .shift_remove("groupName")
+            .and_then(|v| v.into_string())
+            .unwrap_or_default();
           let element_name_pattern = obj
             .shift_remove("elementNamePattern")
             .and_then(|v| v.into_array())

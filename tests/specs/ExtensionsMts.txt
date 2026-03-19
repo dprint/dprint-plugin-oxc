@@ -1,0 +1,6 @@
+-- file.mts --
+== should format mts ==
+const   x:number=1
+
+[expect]
+const x: number = 1;

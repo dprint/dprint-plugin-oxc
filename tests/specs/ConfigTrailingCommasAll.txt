@@ -1,0 +1,10 @@
+~~ trailingCommas: all, lineWidth: 40 ~~
+== should add trailing commas ==
+function foo(aaaa: number, bbbb: number, cccc: string) {}
+
+[expect]
+function foo(
+  aaaa: number,
+  bbbb: number,
+  cccc: string,
+) {}

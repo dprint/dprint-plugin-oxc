@@ -1,0 +1,8 @@
+~~ quoteStyle: double ~~
+== should use double quotes ==
+const x = 'hello';
+const y = 'world';
+
+[expect]
+const x = "hello";
+const y = "world";

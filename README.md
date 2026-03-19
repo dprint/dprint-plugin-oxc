@@ -37,6 +37,14 @@ For an overview of the config, see https://dprint.dev/plugins/oxc/config/
 
 Note: The plugin does not understand Oxc's configuration file because it runs sandboxed in a Wasm runtime—it has no access to the file system in order to read Oxc's config.
 
+### Embedded Formatting
+
+Unlike oxc, this formatter will delegate formatting of embedded languages to other dprint plugins.
+
+Unfortunately, GraphQL tagged template literals cannot be supported for now because oxc_formatter uses a different API for GraphQL documents that cannot be delegated to string-based formatters.
+
+You can disable embedded language formatting by setting `embeddedLanguageFormatting` to `"off"` in the plugin's configuration.
+
 ## JS Formatting API
 
 - [JS Formatter](https://github.com/dprint/js-formatter) - Browser/Deno and Node

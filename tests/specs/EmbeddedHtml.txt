@@ -1,0 +1,7 @@
+== should format embedded html in tagged template ==
+const template = html`<div><span>hello</span></div>`;
+
+[expect]
+const template = html`
+  <div><span>hello</span></div>
+`;

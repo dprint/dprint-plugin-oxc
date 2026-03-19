@@ -42,6 +42,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "843867be96c8daad0d758b57df9392b6d8d271134fce549de6ce169ff98a92af"
 
 [[package]]
+name = "bumpalo"
+version = "3.20.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5d20789868f4b01b2f2caec9f5c4e0213b41e3e5702a50157d699ae31ced2fcb"
+dependencies = [
+ "allocator-api2",
+]
+
+[[package]]
 name = "castaway"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -79,7 +88,7 @@ dependencies = [
  "encode_unicode",
  "libc",
  "once_cell",
- "unicode-width",
+ "unicode-width 0.2.2",
  "windows-sys 0.59.0",
 ]
 
@@ -124,6 +133,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d0a5c400df2834b80a4c3327b3aad3a4c4cd4de0629063962b03235697506a28"
 
 [[package]]
+name = "css_dataset"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "25670139e591f1c2869eb8d0d977028f8d05e859132b4c874ecd02a00d3c9174"
+
+[[package]]
 name = "deno_terminal"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -146,9 +161,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2c1d827947704a9495f705d6aeed270fa21a67f825f22902c28f38dc3af7a9ae"
 dependencies = [
  "anyhow",
+ "bumpalo",
+ "hashbrown 0.15.5",
  "indexmap",
+ "rustc-hash",
  "serde",
  "serde_json",
+ "unicode-width 0.2.2",
+]
+
+[[package]]
+name = "dprint-core-macros"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1675ad2b358481f3cc46202040d64ac7a36c4ade414a696df32e0e45421a6e9f"
+dependencies = [
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -165,12 +194,45 @@ dependencies = [
 ]
 
 [[package]]
+name = "dprint-plugin-json"
+version = "0.21.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "08ef56b214052af8bb5157d0d1b860e042f938abc9360586414a8ff436739508"
+dependencies = [
+ "anyhow",
+ "dprint-core",
+ "dprint-core-macros",
+ "jsonc-parser",
+ "serde",
+ "text_lines",
+]
+
+[[package]]
+name = "dprint-plugin-markdown"
+version = "0.21.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf049c9fa197cf1c327558f1bf28ba6a16bfce1be5ea681b0b5aeede395af951"
+dependencies = [
+ "anyhow",
+ "dprint-core",
+ "dprint-core-macros",
+ "pulldown-cmark",
+ "regex",
+ "serde",
+ "unicode-width 0.1.14",
+]
+
+[[package]]
 name = "dprint-plugin-oxc"
-version = "0.12.0"
+version = "0.13.0"
 dependencies = [
  "anyhow",
  "dprint-core",
  "dprint-development",
+ "dprint-plugin-json",
+ "dprint-plugin-markdown",
+ "malva",
+ "markup_fmt",
  "oxc_allocator",
  "oxc_formatter",
  "oxc_parser",
@@ -235,6 +297,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "foldhash"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d9c4f5dac5e15c24eb999c26181a6ca40b39fe946cbe4c263c7209467bc83af2"
+
+[[package]]
+name = "hashbrown"
+version = "0.15.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9229cfe53dfd69f0609a49f65461bd93001ea1ef889cd5529dd176593f5338a1"
+dependencies = [
+ "allocator-api2",
+ "equivalent",
+ "foldhash",
+]
+
+[[package]]
 name = "hashbrown"
 version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -244,15 +323,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "heck"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
+
+[[package]]
 name = "indexmap"
 version = "2.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7714e70437a7dc3ac8eb7e6f8df75fd8eb422675fc7678aff7364301092b1017"
 dependencies = [
  "equivalent",
- "hashbrown",
+ "hashbrown 0.16.1",
  "serde",
  "serde_core",
+]
+
+[[package]]
+name = "itertools"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
+dependencies = [
+ "either",
 ]
 
 [[package]]
@@ -260,6 +354,12 @@ name = "itoa"
 version = "1.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "92ecc6618181def0457392ccd0ee51198e065e016d1d527a7ac1b6dc7c1f09d2"
+
+[[package]]
+name = "jsonc-parser"
+version = "0.28.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b187b7e06feb2c205d8ec71f12cd8f553e33477ec155ebfc34f8daa7f3ae4eab"
 
 [[package]]
 name = "libc"
@@ -274,6 +374,32 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "224399e74b87b5f3557511d98dff8b14089b3dadafcab6bb93eab67d3aace965"
 dependencies = [
  "scopeguard",
+]
+
+[[package]]
+name = "malva"
+version = "0.15.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7402fe65a61b31ddfcd60f3d965547baab1f1bbdd4506afa73edabed8ed002af"
+dependencies = [
+ "aho-corasick",
+ "itertools",
+ "memchr",
+ "raffia",
+ "tiny_pretty",
+]
+
+[[package]]
+name = "markup_fmt"
+version = "0.26.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b7cb640cd04ff332352c815f747692bb594808c6fac1c5a2102ef7f9d5344ab1"
+dependencies = [
+ "aho-corasick",
+ "css_dataset",
+ "itertools",
+ "memchr",
+ "tiny_pretty",
 ]
 
 [[package]]
@@ -352,7 +478,7 @@ dependencies = [
  "textwrap",
  "thiserror",
  "unicode-segmentation",
- "unicode-width",
+ "unicode-width 0.2.2",
 ]
 
 [[package]]
@@ -363,7 +489,7 @@ checksum = "d4faecb54d0971f948fbc1918df69b26007e6f279a204793669542e1e8b75eb3"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -372,7 +498,7 @@ version = "0.121.0"
 source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.121.0#6cd513ffaeca12beb6858c685bdbf5c705771663"
 dependencies = [
  "allocator-api2",
- "hashbrown",
+ "hashbrown 0.16.1",
  "oxc_data_structures",
  "rustc-hash",
 ]
@@ -401,7 +527,7 @@ dependencies = [
  "phf",
  "proc-macro2",
  "quote",
- "syn",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -456,7 +582,7 @@ dependencies = [
  "oxc_syntax",
  "phf",
  "rustc-hash",
- "unicode-width",
+ "unicode-width 0.2.2",
 ]
 
 [[package]]
@@ -525,7 +651,7 @@ version = "0.121.0"
 source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.121.0#6cd513ffaeca12beb6858c685bdbf5c705771663"
 dependencies = [
  "compact_str",
- "hashbrown",
+ "hashbrown 0.16.1",
  "oxc_allocator",
  "oxc_estree",
 ]
@@ -608,7 +734,7 @@ dependencies = [
  "phf_shared",
  "proc-macro2",
  "quote",
- "syn",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -640,12 +766,44 @@ dependencies = [
 ]
 
 [[package]]
+name = "pulldown-cmark"
+version = "0.11.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "679341d22c78c6c649893cbd6c3278dcbe9fc4faa62fea3a9296ae2b50c14625"
+dependencies = [
+ "bitflags",
+ "memchr",
+ "unicase",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "21b2ebcf727b7760c461f091f9f0f539b77b8e87f2fd88131e7f1b433b3cece4"
 dependencies = [
  "proc-macro2",
+]
+
+[[package]]
+name = "raffia"
+version = "0.12.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "826278ad840a1f047475ac36c40569b953b0b5359b126d7a09058e2a42151f89"
+dependencies = [
+ "raffia_macro",
+ "smallvec",
+]
+
+[[package]]
+name = "raffia_macro"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8ac21f5e4bc6b29ea5d5e691a9aa08b2b9fd8891f48a99157b9f02d8a48e1318"
+dependencies = [
+ "heck",
+ "quote",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -763,7 +921,7 @@ checksum = "d540f220d3187173da220f885ab66608367b6574e925011a9353e4badda91d79"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -812,6 +970,17 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
 name = "syn"
+version = "1.0.109"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "72b64191b275b66ffe2469e8af2c1cfe3bafa67b529ead792a6d0160888b4237"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "unicode-ident",
+]
+
+[[package]]
+name = "syn"
 version = "2.0.117"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e665b8803e7b1d2a727f4023456bbbbe74da67099c585258af0ad9c5013b9b99"
@@ -831,6 +1000,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "text_lines"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7fd5828de7deaa782e1dd713006ae96b3bee32d3279b79eb67ecf8072c059bcf"
+
+[[package]]
 name = "textwrap"
 version = "0.16.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -838,7 +1013,7 @@ checksum = "c13547615a44dc9c452a8a534638acdf07120d4b6847c8178705da06306a3057"
 dependencies = [
  "smawk",
  "unicode-linebreak",
- "unicode-width",
+ "unicode-width 0.2.2",
 ]
 
 [[package]]
@@ -858,8 +1033,23 @@ checksum = "ebc4ee7f67670e9b64d05fa4253e753e016c6c95ff35b89b7941d6b856dec1d5"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 2.0.117",
 ]
+
+[[package]]
+name = "tiny_pretty"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "650d82e943da333637be9f1567d33d605e76810a26464edfd7ae74f7ef181e95"
+dependencies = [
+ "unicode-width 0.2.2",
+]
+
+[[package]]
+name = "unicase"
+version = "2.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dbc4bc3a9f746d862c45cb89d705aa10f187bb96c76001afab07a0d35ce60142"
 
 [[package]]
 name = "unicode-id-start"
@@ -884,6 +1074,12 @@ name = "unicode-segmentation"
 version = "1.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f6ccf251212114b54433ec949fd6a7841275f9ada20dddd2f29e9ceea4501493"
+
+[[package]]
+name = "unicode-width"
+version = "0.1.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7dd6e30e90baa6f72411720665d41d89b9a3d039dc45b8faea1ddd07f617f6af"
 
 [[package]]
 name = "unicode-width"

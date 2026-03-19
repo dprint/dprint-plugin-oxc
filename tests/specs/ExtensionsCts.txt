@@ -1,0 +1,6 @@
+-- file.cts --
+== should format cts ==
+const   x:number=1
+
+[expect]
+const x: number = 1;

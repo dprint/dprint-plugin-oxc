@@ -1,0 +1,6 @@
+-- file.jsx --
+== should format jsx ==
+const el=<div>hi</div>
+
+[expect]
+const el = <div>hi</div>;
