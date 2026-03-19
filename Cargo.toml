@@ -35,5 +35,9 @@ serde_json = { version = "1.0", optional = true }
 
 [dev-dependencies]
 dprint-development = "0.10.2"
+dprint-plugin-json = "0.21.1"
+dprint-plugin-markdown = "0.21.1"
+malva = "0.15.2"
+markup_fmt = "0.26.0"
 pretty_assertions = "1.4.0"
 serde_json = { version = "1.0" }

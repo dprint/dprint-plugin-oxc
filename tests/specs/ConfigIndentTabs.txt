@@ -1,0 +1,10 @@
+~~ indentStyle: tab ~~
+== should indent with tabs ==
+function foo() {
+const x = 1;
+}
+
+[expect]
+function foo() {
+	const x = 1;
+}

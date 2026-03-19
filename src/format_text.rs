@@ -254,8 +254,9 @@ mod test {
   }
 
   #[test]
-  fn formats_embedded_css() {
-    let input = "const styles=css`.foo{color:red}`;";
+  fn formats_embedded_html() {
+    // Uses html`` tag which goes through the string-based format_embedded path
+    let input = "const template=html`<div>hello</div>`;";
     let config = crate::configuration::Configuration::default();
     let result = format_text(
       std::path::Path::new("test.js"),
@@ -272,8 +273,8 @@ mod test {
     .unwrap();
     assert_eq!(
       result,
-      "const styles = css`
-  formatted_tagged-css_.foo{color:red}
+      "const template = html`
+  formatted_tagged-html_<div>hello</div>
 `;
 "
     );

@@ -1,0 +1,6 @@
+-- file.cjs --
+== should format cjs ==
+const   x=1
+
+[expect]
+const x = 1;

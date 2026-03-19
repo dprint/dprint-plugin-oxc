@@ -1,0 +1,6 @@
+~~ arrowParentheses: always ~~
+== should add parens for single param ==
+const f = x => x;
+
+[expect]
+const f = (x) => x;

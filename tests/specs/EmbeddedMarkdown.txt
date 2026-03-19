@@ -1,0 +1,10 @@
+== should format embedded markdown in tagged template ==
+const docs = md`# Hello
+This is a   test.`;
+
+[expect]
+const docs = md`
+  # Hello
+
+  This is a test.
+`;
