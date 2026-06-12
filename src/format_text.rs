@@ -1,5 +1,3 @@
-use anyhow::Result;
-use anyhow::bail;
 use oxc_allocator::Allocator;
 use oxc_formatter::ArrowParentheses;
 use oxc_formatter::AttributePosition;
@@ -27,7 +25,9 @@ use std::path::Path;
 
 use crate::configuration::Configuration;
 
-pub fn format_text(file_path: &Path, input_text: &str, config: &Configuration) -> Result<Option<String>> {
+type FormatError = Box<dyn std::error::Error + Send + Sync>;
+
+pub fn format_text(file_path: &Path, input_text: &str, config: &Configuration) -> Result<Option<String>, FormatError> {
   let source_type = match SourceType::from_path(file_path) {
     Ok(source_type) => source_type,
     Err(_) => return Ok(None),
@@ -50,13 +50,13 @@ pub fn format_text(file_path: &Path, input_text: &str, config: &Configuration) -
       }
       error_text.push_str(&error.to_string());
     }
-    bail!("{}", error_text);
+    return Err(error_text.into());
   }
 
   let options = build_format_options(config);
   let output = oxc_formatter::format_program(&allocator, &parsed.program, options, None)
     .print()
-    .map_err(|e| anyhow::anyhow!("{e}"))?
+    .map_err(|e| e.to_string())?
     .into_code();
 
   if output == input_text {
