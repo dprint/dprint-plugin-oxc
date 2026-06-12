@@ -137,7 +137,16 @@ fn resolve_sort_imports_options(
         })
         .collect::<Vec<_>>()
     })
-    .unwrap_or_default();
+    .unwrap_or_else(|| {
+      vec![
+        vec!["builtin".to_string()],
+        vec!["external".to_string()],
+        vec!["internal".to_string(), "subpath".to_string()],
+        vec!["parent".to_string(), "sibling".to_string(), "index".to_string()],
+        vec!["style".to_string()],
+        vec!["unknown".to_string()],
+      ]
+    });
 
   // Parse customGroups as array of objects with groupName and elementNamePattern
   let custom_groups = obj
