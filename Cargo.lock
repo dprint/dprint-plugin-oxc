@@ -166,13 +166,14 @@ dependencies = [
 
 [[package]]
 name = "dprint-plugin-oxc"
-version = "0.24.0"
+version = "0.25.0"
 dependencies = [
  "anyhow",
  "dprint-core",
  "dprint-development",
  "oxc_allocator",
  "oxc_formatter",
+ "oxc_formatter_core",
  "oxc_parser",
  "oxc_span",
  "pretty_assertions",
@@ -383,8 +384,8 @@ dependencies = [
 
 [[package]]
 name = "oxc_allocator"
-version = "0.133.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.133.0#83328b65ce13148c08b177a8703e6b3a508d59a9"
+version = "0.135.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.135.0#e9b8fd595cf6c997e2bb14fc4cbb9ccf91739f87"
 dependencies = [
  "allocator-api2",
  "hashbrown 0.17.0",
@@ -394,8 +395,8 @@ dependencies = [
 
 [[package]]
 name = "oxc_ast"
-version = "0.133.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.133.0#83328b65ce13148c08b177a8703e6b3a508d59a9"
+version = "0.135.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.135.0#e9b8fd595cf6c997e2bb14fc4cbb9ccf91739f87"
 dependencies = [
  "bitflags",
  "oxc_allocator",
@@ -411,8 +412,8 @@ dependencies = [
 
 [[package]]
 name = "oxc_ast_macros"
-version = "0.133.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.133.0#83328b65ce13148c08b177a8703e6b3a508d59a9"
+version = "0.135.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.135.0#e9b8fd595cf6c997e2bb14fc4cbb9ccf91739f87"
 dependencies = [
  "phf",
  "proc-macro2",
@@ -422,13 +423,13 @@ dependencies = [
 
 [[package]]
 name = "oxc_data_structures"
-version = "0.133.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.133.0#83328b65ce13148c08b177a8703e6b3a508d59a9"
+version = "0.135.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.135.0#e9b8fd595cf6c997e2bb14fc4cbb9ccf91739f87"
 
 [[package]]
 name = "oxc_diagnostics"
-version = "0.133.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.133.0#83328b65ce13148c08b177a8703e6b3a508d59a9"
+version = "0.135.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.135.0#e9b8fd595cf6c997e2bb14fc4cbb9ccf91739f87"
 dependencies = [
  "cow-utils",
  "oxc-miette",
@@ -437,8 +438,8 @@ dependencies = [
 
 [[package]]
 name = "oxc_ecmascript"
-version = "0.133.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.133.0#83328b65ce13148c08b177a8703e6b3a508d59a9"
+version = "0.135.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.135.0#e9b8fd595cf6c997e2bb14fc4cbb9ccf91739f87"
 dependencies = [
  "cow-utils",
  "num-bigint",
@@ -452,13 +453,13 @@ dependencies = [
 
 [[package]]
 name = "oxc_estree"
-version = "0.133.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.133.0#83328b65ce13148c08b177a8703e6b3a508d59a9"
+version = "0.135.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.135.0#e9b8fd595cf6c997e2bb14fc4cbb9ccf91739f87"
 
 [[package]]
 name = "oxc_formatter"
-version = "0.51.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.133.0#83328b65ce13148c08b177a8703e6b3a508d59a9"
+version = "0.54.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.135.0#e9b8fd595cf6c997e2bb14fc4cbb9ccf91739f87"
 dependencies = [
  "cow-utils",
  "fast-glob",
@@ -468,7 +469,8 @@ dependencies = [
  "nodejs-built-in-modules",
  "oxc_allocator",
  "oxc_ast",
- "oxc_data_structures",
+ "oxc_diagnostics",
+ "oxc_formatter_core",
  "oxc_jsdoc",
  "oxc_parser",
  "oxc_span",
@@ -481,10 +483,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "oxc_formatter_core"
+version = "0.54.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.135.0#e9b8fd595cf6c997e2bb14fc4cbb9ccf91739f87"
+dependencies = [
+ "cow-utils",
+ "oxc_allocator",
+ "oxc_data_structures",
+ "oxc_span",
+ "rustc-hash",
+ "serde_json",
+ "unicode-width",
+]
+
+[[package]]
 name = "oxc_index"
-version = "4.1.0"
+version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb3e6120999627ec9703025eab7c9f410ebb7e95557632a8902ca48210416c2b"
+checksum = "191884bee6c3744909a51acc7d78d4ae370d817b25875b10642f632327b6296e"
 dependencies = [
  "nonmax",
  "serde",
@@ -492,8 +508,8 @@ dependencies = [
 
 [[package]]
 name = "oxc_jsdoc"
-version = "0.133.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.133.0#83328b65ce13148c08b177a8703e6b3a508d59a9"
+version = "0.135.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.135.0#e9b8fd595cf6c997e2bb14fc4cbb9ccf91739f87"
 dependencies = [
  "oxc_ast",
  "oxc_span",
@@ -502,8 +518,8 @@ dependencies = [
 
 [[package]]
 name = "oxc_parser"
-version = "0.133.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.133.0#83328b65ce13148c08b177a8703e6b3a508d59a9"
+version = "0.135.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.135.0#e9b8fd595cf6c997e2bb14fc4cbb9ccf91739f87"
 dependencies = [
  "bitflags",
  "cow-utils",
@@ -525,8 +541,8 @@ dependencies = [
 
 [[package]]
 name = "oxc_regular_expression"
-version = "0.133.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.133.0#83328b65ce13148c08b177a8703e6b3a508d59a9"
+version = "0.135.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.135.0#e9b8fd595cf6c997e2bb14fc4cbb9ccf91739f87"
 dependencies = [
  "bitflags",
  "oxc_allocator",
@@ -541,8 +557,8 @@ dependencies = [
 
 [[package]]
 name = "oxc_span"
-version = "0.133.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.133.0#83328b65ce13148c08b177a8703e6b3a508d59a9"
+version = "0.135.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.135.0#e9b8fd595cf6c997e2bb14fc4cbb9ccf91739f87"
 dependencies = [
  "compact_str",
  "oxc-miette",
@@ -554,8 +570,8 @@ dependencies = [
 
 [[package]]
 name = "oxc_str"
-version = "0.133.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.133.0#83328b65ce13148c08b177a8703e6b3a508d59a9"
+version = "0.135.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.135.0#e9b8fd595cf6c997e2bb14fc4cbb9ccf91739f87"
 dependencies = [
  "compact_str",
  "hashbrown 0.17.0",
@@ -565,8 +581,8 @@ dependencies = [
 
 [[package]]
 name = "oxc_syntax"
-version = "0.133.0"
-source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.133.0#83328b65ce13148c08b177a8703e6b3a508d59a9"
+version = "0.135.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.135.0#e9b8fd595cf6c997e2bb14fc4cbb9ccf91739f87"
 dependencies = [
  "bitflags",
  "cow-utils",
