@@ -1,16 +1,9 @@
-use anyhow::Result;
-use anyhow::bail;
 use oxc_allocator::Allocator;
 use oxc_formatter::ArrowParentheses;
 use oxc_formatter::AttributePosition;
 use oxc_formatter::EmbeddedLanguageFormatting;
 use oxc_formatter::Expand;
-use oxc_formatter::FormatOptions;
-use oxc_formatter::Formatter;
-use oxc_formatter::IndentStyle;
-use oxc_formatter::IndentWidth;
-use oxc_formatter::LineEnding;
-use oxc_formatter::LineWidth;
+use oxc_formatter::JsFormatOptions;
 use oxc_formatter::OperatorPosition;
 use oxc_formatter::QuoteProperties;
 use oxc_formatter::QuoteStyle;
@@ -21,6 +14,10 @@ use oxc_formatter::SortImportsOptions;
 use oxc_formatter::SortOrder;
 use oxc_formatter::SortTailwindcssOptions;
 use oxc_formatter::TrailingCommas;
+use oxc_formatter_core::IndentStyle;
+use oxc_formatter_core::IndentWidth;
+use oxc_formatter_core::LineEnding;
+use oxc_formatter_core::LineWidth;
 use oxc_parser::ParseOptions;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
@@ -28,7 +25,9 @@ use std::path::Path;
 
 use crate::configuration::Configuration;
 
-pub fn format_text(file_path: &Path, input_text: &str, config: &Configuration) -> Result<Option<String>> {
+type FormatError = Box<dyn std::error::Error + Send + Sync>;
+
+pub fn format_text(file_path: &Path, input_text: &str, config: &Configuration) -> Result<Option<String>, FormatError> {
   let source_type = match SourceType::from_path(file_path) {
     Ok(source_type) => source_type,
     Err(_) => return Ok(None),
@@ -51,12 +50,14 @@ pub fn format_text(file_path: &Path, input_text: &str, config: &Configuration) -
       }
       error_text.push_str(&error.to_string());
     }
-    bail!("{}", error_text);
+    return Err(error_text.into());
   }
 
   let options = build_format_options(config);
-  let formatter = Formatter::new(&allocator, options);
-  let output = formatter.build(&parsed.program);
+  let output = oxc_formatter::format_program(&allocator, &parsed.program, options, None)
+    .print()
+    .map_err(|e| e.to_string())?
+    .into_code();
 
   if output == input_text {
     Ok(None)
@@ -65,8 +66,8 @@ pub fn format_text(file_path: &Path, input_text: &str, config: &Configuration) -
   }
 }
 
-fn build_format_options(config: &Configuration) -> FormatOptions {
-  let mut options = FormatOptions::default();
+fn build_format_options(config: &Configuration) -> JsFormatOptions {
+  let mut options = JsFormatOptions::default();
 
   if let Some(line_ending) = config.line_ending {
     options.line_ending = match line_ending {
