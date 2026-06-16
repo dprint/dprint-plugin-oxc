@@ -164,7 +164,7 @@ dependencies = [
 
 [[package]]
 name = "dprint-plugin-oxc"
-version = "0.26.0"
+version = "0.27.0"
 dependencies = [
  "dprint-core",
  "dprint-development",
