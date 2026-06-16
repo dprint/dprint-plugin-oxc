@@ -42,9 +42,9 @@ pub fn format_text(file_path: &Path, input_text: &str, config: &Configuration) -
     .with_options(parse_options)
     .parse();
 
-  if !parsed.errors.is_empty() {
+  if !parsed.diagnostics.is_empty() {
     let mut error_text = String::new();
-    for (i, error) in parsed.errors.iter().enumerate() {
+    for (i, error) in parsed.diagnostics.iter().enumerate() {
       if i > 0 {
         error_text.push('\n');
       }
