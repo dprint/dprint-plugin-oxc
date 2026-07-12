@@ -118,6 +118,84 @@ pub enum SortOrder {
 
 generate_str_to_from![SortOrder, [Asc, "asc"], [Desc, "desc"]];
 
+#[derive(Clone, PartialEq, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum CommentLineStrategy {
+  SingleLine,
+  Multiline,
+  Keep,
+}
+
+generate_str_to_from![
+  CommentLineStrategy,
+  [SingleLine, "singleLine"],
+  [Multiline, "multiline"],
+  [Keep, "keep"]
+];
+
+#[derive(Clone, PartialEq, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum LineWrappingStyle {
+  Greedy,
+  Balance,
+}
+
+generate_str_to_from![LineWrappingStyle, [Greedy, "greedy"], [Balance, "balance"]];
+
+#[derive(Clone, PartialEq, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ImportSelector {
+  Type,
+  SideEffectStyle,
+  SideEffect,
+  Style,
+  Index,
+  Sibling,
+  Parent,
+  Subpath,
+  Internal,
+  Builtin,
+  External,
+  Import,
+}
+
+generate_str_to_from![
+  ImportSelector,
+  [Type, "type"],
+  [SideEffectStyle, "side_effect_style"],
+  [SideEffect, "side_effect"],
+  [Style, "style"],
+  [Index, "index"],
+  [Sibling, "sibling"],
+  [Parent, "parent"],
+  [Subpath, "subpath"],
+  [Internal, "internal"],
+  [Builtin, "builtin"],
+  [External, "external"],
+  [Import, "import"]
+];
+
+#[derive(Clone, PartialEq, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ImportModifier {
+  SideEffect,
+  Type,
+  Value,
+  Default,
+  Wildcard,
+  Named,
+}
+
+generate_str_to_from![
+  ImportModifier,
+  [SideEffect, "side_effect"],
+  [Type, "type"],
+  [Value, "value"],
+  [Default, "default"],
+  [Wildcard, "wildcard"],
+  [Named, "named"]
+];
+
 #[derive(Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SortImportsOptions {
@@ -145,21 +223,49 @@ pub struct CustomGroupDefinition {
   pub group_name: String,
   #[serde(default)]
   pub element_name_pattern: Vec<String>,
+  pub selector: Option<ImportSelector>,
+  #[serde(default)]
+  pub modifiers: Vec<ImportModifier>,
 }
 
 #[derive(Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TailwindcssOptions {
-  pub config: Option<String>,
-  pub stylesheet: Option<String>,
   #[serde(default)]
   pub functions: Vec<String>,
   #[serde(default)]
   pub attributes: Vec<String>,
   #[serde(default)]
   pub preserve_whitespace: bool,
+}
+
+#[derive(Default, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct JsdocOptions {
+  #[serde(default = "default_true")]
+  pub capitalize_descriptions: bool,
+  pub comment_line_strategy: Option<CommentLineStrategy>,
   #[serde(default)]
-  pub preserve_duplicates: bool,
+  pub separate_tag_groups: bool,
+  #[serde(default)]
+  pub separate_returns_from_param: bool,
+  #[serde(default)]
+  pub bracket_spacing: bool,
+  #[serde(default)]
+  pub description_with_dot: bool,
+  #[serde(default = "default_true")]
+  pub add_default_to_description: bool,
+  #[serde(default)]
+  pub prefer_code_fences: bool,
+  pub line_wrapping_style: Option<LineWrappingStyle>,
+  #[serde(default)]
+  pub description_tag: bool,
+  #[serde(default)]
+  pub keep_unparsable_example_indent: bool,
+}
+
+const fn default_true() -> bool {
+  true
 }
 
 #[derive(Default, Clone, Serialize, Deserialize)]
@@ -182,6 +288,8 @@ pub struct Configuration {
   pub embedded_language_formatting: Option<EmbeddedLanguageFormatting>,
   pub experimental_operator_position: Option<OperatorPosition>,
   pub experimental_ternaries: Option<bool>,
+  pub html_whitespace_sensitivity_ignore: Option<bool>,
   pub experimental_sort_imports: Option<SortImportsOptions>,
   pub experimental_tailwindcss: Option<TailwindcssOptions>,
+  pub jsdoc: Option<JsdocOptions>,
 }

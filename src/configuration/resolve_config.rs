@@ -1,7 +1,11 @@
+use super::CommentLineStrategy;
 use super::Configuration;
 use super::CustomGroupDefinition;
+use super::ImportModifier;
 use super::IndentStyle;
+use super::JsdocOptions;
 use super::LineEnding;
+use super::LineWrappingStyle;
 use super::SortImportsOptions;
 use super::SortOrder;
 use super::TailwindcssOptions;
@@ -75,8 +79,14 @@ pub fn resolve_config(
     embedded_language_formatting: get_nullable_value(&mut config, "embeddedLanguageFormatting", &mut diagnostics),
     experimental_operator_position: get_nullable_value(&mut config, "experimentalOperatorPosition", &mut diagnostics),
     experimental_ternaries: get_nullable_value(&mut config, "experimentalTernaries", &mut diagnostics),
+    html_whitespace_sensitivity_ignore: get_nullable_value(
+      &mut config,
+      "htmlWhitespaceSensitivityIgnore",
+      &mut diagnostics,
+    ),
     experimental_sort_imports: resolve_sort_imports_options(&mut config, &mut diagnostics),
     experimental_tailwindcss: resolve_tailwindcss_options(&mut config, &mut diagnostics),
+    jsdoc: resolve_jsdoc_options(&mut config, &mut diagnostics),
   };
 
   diagnostics.extend(get_unknown_property_diagnostics(config));
@@ -157,15 +167,32 @@ fn resolve_sort_imports_options(
         .into_iter()
         .filter_map(|v| {
           let mut obj = v.into_object()?;
-          let group_name = obj.shift_remove("groupName").and_then(|v| v.into_string()).unwrap_or_default();
+          let group_name = obj
+            .shift_remove("groupName")
+            .and_then(|v| v.into_string())
+            .unwrap_or_default();
           let element_name_pattern = obj
             .shift_remove("elementNamePattern")
             .and_then(|v| v.into_array())
             .map(|arr| arr.into_iter().filter_map(|v| v.into_string()).collect::<Vec<_>>())
             .unwrap_or_default();
+          let selector = get_nullable_value(&mut obj, "selector", &mut inner_diagnostics);
+          let modifiers = obj
+            .shift_remove("modifiers")
+            .and_then(|v| v.into_array())
+            .map(|arr| {
+              arr
+                .into_iter()
+                .filter_map(|v| v.into_string())
+                .filter_map(|value| value.parse::<ImportModifier>().ok())
+                .collect()
+            })
+            .unwrap_or_default();
           Some(CustomGroupDefinition {
             group_name,
             element_name_pattern,
+            selector,
+            modifiers,
           })
         })
         .collect::<Vec<_>>()
@@ -215,12 +242,8 @@ fn resolve_tailwindcss_options(
   let mut obj = obj;
   let mut inner_diagnostics = Vec::new();
 
-  let config_path = get_nullable_value::<String>(&mut obj, "config", &mut inner_diagnostics);
-  let stylesheet = get_nullable_value::<String>(&mut obj, "stylesheet", &mut inner_diagnostics);
   let preserve_whitespace =
     get_nullable_value::<bool>(&mut obj, "preserveWhitespace", &mut inner_diagnostics).unwrap_or(false);
-  let preserve_duplicates =
-    get_nullable_value::<bool>(&mut obj, "preserveDuplicates", &mut inner_diagnostics).unwrap_or(false);
 
   // Parse functions as array of strings
   let functions = obj
@@ -247,11 +270,55 @@ fn resolve_tailwindcss_options(
   diagnostics.extend(inner_diagnostics);
 
   Some(TailwindcssOptions {
-    config: config_path,
-    stylesheet,
     functions,
     attributes,
     preserve_whitespace,
-    preserve_duplicates,
   })
+}
+
+fn resolve_jsdoc_options(
+  config: &mut ConfigKeyMap,
+  diagnostics: &mut Vec<ConfigurationDiagnostic>,
+) -> Option<JsdocOptions> {
+  let value = config.shift_remove("jsdoc")?;
+  let mut obj = match value.into_object() {
+    Some(obj) => obj,
+    None => {
+      diagnostics.push(ConfigurationDiagnostic {
+        property_name: "jsdoc".to_string(),
+        message: "expected an object".to_string(),
+      });
+      return None;
+    }
+  };
+  let mut inner_diagnostics = Vec::new();
+  let options = JsdocOptions {
+    capitalize_descriptions: get_nullable_value(&mut obj, "capitalizeDescriptions", &mut inner_diagnostics)
+      .unwrap_or(true),
+    comment_line_strategy: get_nullable_value::<CommentLineStrategy>(
+      &mut obj,
+      "commentLineStrategy",
+      &mut inner_diagnostics,
+    ),
+    separate_tag_groups: get_nullable_value(&mut obj, "separateTagGroups", &mut inner_diagnostics).unwrap_or(false),
+    separate_returns_from_param: get_nullable_value(&mut obj, "separateReturnsFromParam", &mut inner_diagnostics)
+      .unwrap_or(false),
+    bracket_spacing: get_nullable_value(&mut obj, "bracketSpacing", &mut inner_diagnostics).unwrap_or(false),
+    description_with_dot: get_nullable_value(&mut obj, "descriptionWithDot", &mut inner_diagnostics).unwrap_or(false),
+    add_default_to_description: get_nullable_value(&mut obj, "addDefaultToDescription", &mut inner_diagnostics)
+      .unwrap_or(true),
+    prefer_code_fences: get_nullable_value(&mut obj, "preferCodeFences", &mut inner_diagnostics).unwrap_or(false),
+    line_wrapping_style: get_nullable_value::<LineWrappingStyle>(&mut obj, "lineWrappingStyle", &mut inner_diagnostics),
+    description_tag: get_nullable_value(&mut obj, "descriptionTag", &mut inner_diagnostics).unwrap_or(false),
+    keep_unparsable_example_indent: get_nullable_value(&mut obj, "keepUnparsableExampleIndent", &mut inner_diagnostics)
+      .unwrap_or(false),
+  };
+  for (key, _) in obj {
+    inner_diagnostics.push(ConfigurationDiagnostic {
+      property_name: format!("jsdoc.{}", key),
+      message: "Unknown property".to_string(),
+    });
+  }
+  diagnostics.extend(inner_diagnostics);
+  Some(options)
 }

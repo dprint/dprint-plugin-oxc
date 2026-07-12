@@ -181,6 +181,11 @@
       "type": "boolean",
       "default": false
     },
+    "htmlWhitespaceSensitivityIgnore": {
+      "description": "Whether HTML-in-JS templates always use hard line breaks for wrapping.",
+      "type": "boolean",
+      "default": false
+    },
     "experimentalSortImports": {
       "description": "[EXPERIMENTAL] Sort import statements. When set, enables import sorting with the specified options.",
       "type": "object",
@@ -240,6 +245,40 @@
             }
           },
           "default": []
+        },
+        "customGroups": {
+          "description": "Definitions for custom import groups referenced by groups.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "object",
+            "properties": {
+              "groupName": {
+                "description": "The custom group name.",
+                "type": "string"
+              },
+              "elementNamePattern": {
+                "description": "Glob patterns that match import sources.",
+                "type": "array",
+                "items": { "type": "string" },
+                "default": []
+              },
+              "selector": {
+                "description": "The import selector that must match.",
+                "type": "string",
+                "oneOf": [{ "const": "type" }, { "const": "side_effect_style" }, { "const": "side_effect" }, { "const": "style" }, { "const": "index" }, { "const": "sibling" }, { "const": "parent" }, { "const": "subpath" }, { "const": "internal" }, { "const": "builtin" }, { "const": "external" }, { "const": "import" }]
+              },
+              "modifiers": {
+                "description": "Import modifiers that must all be present.",
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "oneOf": [{ "const": "side_effect" }, { "const": "type" }, { "const": "value" }, { "const": "default" }, { "const": "wildcard" }, { "const": "named" }]
+                },
+                "default": []
+              }
+            }
+          }
         }
       }
     },
@@ -247,14 +286,6 @@
       "description": "[EXPERIMENTAL] Enable Tailwind CSS class sorting. When set, enables class sorting with the specified options.",
       "type": "object",
       "properties": {
-        "config": {
-          "description": "Path to the Tailwind CSS config file.",
-          "type": "string"
-        },
-        "stylesheet": {
-          "description": "Path to a custom stylesheet.",
-          "type": "string"
-        },
         "functions": {
           "description": "Custom functions to sort classes in.",
           "type": "array",
@@ -275,9 +306,67 @@
           "description": "Preserve whitespace in class strings.",
           "type": "boolean",
           "default": false
+        }
+      }
+    },
+    "jsdoc": {
+      "description": "Enable JSDoc comment formatting with the specified options.",
+      "type": "object",
+      "properties": {
+        "capitalizeDescriptions": {
+          "description": "Capitalize the first letter of tag descriptions.",
+          "type": "boolean",
+          "default": true
         },
-        "preserveDuplicates": {
-          "description": "Preserve duplicate class names.",
+        "commentLineStrategy": {
+          "description": "How to format JSDoc comment blocks.",
+          "type": "string",
+          "default": "singleLine",
+          "oneOf": [{ "const": "singleLine", "description": "Convert to a single line when possible." }, { "const": "multiline", "description": "Always use multiple lines." }, { "const": "keep", "description": "Preserve the original line layout." }]
+        },
+        "separateTagGroups": {
+          "description": "Add blank lines between different tag groups.",
+          "type": "boolean",
+          "default": false
+        },
+        "separateReturnsFromParam": {
+          "description": "Add a blank line between the last @param and @returns.",
+          "type": "boolean",
+          "default": false
+        },
+        "bracketSpacing": {
+          "description": "Add spaces inside JSDoc type braces.",
+          "type": "boolean",
+          "default": false
+        },
+        "descriptionWithDot": {
+          "description": "Add a trailing dot to descriptions.",
+          "type": "boolean",
+          "default": false
+        },
+        "addDefaultToDescription": {
+          "description": "Append default values to @param descriptions.",
+          "type": "boolean",
+          "default": true
+        },
+        "preferCodeFences": {
+          "description": "Use fenced code blocks for code without a language tag.",
+          "type": "boolean",
+          "default": false
+        },
+        "lineWrappingStyle": {
+          "description": "How JSDoc description lines wrap at the configured line width.",
+          "type": "string",
+          "default": "greedy",
+          "oneOf": [{ "const": "greedy", "description": "Always re-wrap text to fit the line width." }, { "const": "balance", "description": "Keep original line breaks when they fit." }]
+        },
+        "descriptionTag": {
+          "description": "Emit an @description tag instead of an inline description.",
+          "type": "boolean",
+          "default": false
+        },
+        "keepUnparsableExampleIndent": {
+          "description": "Preserve indentation in unparsable @example code.",
           "type": "boolean",
           "default": false
         }

@@ -1,15 +1,20 @@
 use oxc_allocator::Allocator;
 use oxc_formatter::ArrowParentheses;
 use oxc_formatter::AttributePosition;
+use oxc_formatter::CommentLineStrategy;
+use oxc_formatter::CustomGroupDefinition;
 use oxc_formatter::EmbeddedLanguageFormatting;
 use oxc_formatter::Expand;
+use oxc_formatter::GroupEntry;
+use oxc_formatter::ImportModifier;
+use oxc_formatter::ImportSelector;
 use oxc_formatter::JsFormatOptions;
+use oxc_formatter::JsdocOptions;
+use oxc_formatter::LineWrappingStyle;
 use oxc_formatter::OperatorPosition;
 use oxc_formatter::QuoteProperties;
 use oxc_formatter::QuoteStyle;
 use oxc_formatter::Semicolons;
-use oxc_formatter::CustomGroupDefinition;
-use oxc_formatter::GroupEntry;
 use oxc_formatter::SortImportsOptions;
 use oxc_formatter::SortOrder;
 use oxc_formatter::SortTailwindcssOptions;
@@ -85,14 +90,16 @@ fn build_format_options(config: &Configuration) -> JsFormatOptions {
   }
 
   if let Some(value) = config.indent_width
-    && let Ok(width) = IndentWidth::try_from(value) {
-      options.indent_width = width;
-    }
+    && let Ok(width) = IndentWidth::try_from(value)
+  {
+    options.indent_width = width;
+  }
 
   if let Some(value) = config.line_width
-    && let Ok(width) = LineWidth::try_from(value) {
-      options.line_width = width;
-    }
+    && let Ok(width) = LineWidth::try_from(value)
+  {
+    options.line_width = width;
+  }
 
   if let Some(semicolons) = config.semicolons {
     options.semicolons = match semicolons {
@@ -178,6 +185,10 @@ fn build_format_options(config: &Configuration) -> JsFormatOptions {
     options.experimental_ternaries = experimental_ternaries;
   }
 
+  if let Some(html_whitespace_sensitivity_ignore) = config.html_whitespace_sensitivity_ignore {
+    options.html_whitespace_sensitivity_ignore = html_whitespace_sensitivity_ignore;
+  }
+
   if let Some(ref sort_imports) = config.experimental_sort_imports {
     options.sort_imports = Some(SortImportsOptions {
       partition_by_newline: sort_imports.partition_by_newline,
@@ -193,16 +204,43 @@ fn build_format_options(config: &Configuration) -> JsFormatOptions {
       ignore_case: sort_imports.ignore_case.unwrap_or(true),
       newlines_between: sort_imports.newlines_between.unwrap_or(true),
       internal_pattern: sort_imports.internal_pattern.clone(),
-      groups: sort_imports.groups.iter().map(|group| {
-        group.iter().map(|s| GroupEntry::parse(s)).collect()
-      }).collect(),
+      groups: sort_imports
+        .groups
+        .iter()
+        .map(|group| group.iter().map(|s| GroupEntry::parse(s)).collect())
+        .collect(),
       custom_groups: sort_imports
         .custom_groups
         .iter()
         .map(|g| CustomGroupDefinition {
           group_name: g.group_name.clone(),
           element_name_pattern: g.element_name_pattern.clone(),
-          ..Default::default()
+          selector: g.selector.map(|selector| match selector {
+            crate::configuration::ImportSelector::Type => ImportSelector::Type,
+            crate::configuration::ImportSelector::SideEffectStyle => ImportSelector::SideEffectStyle,
+            crate::configuration::ImportSelector::SideEffect => ImportSelector::SideEffect,
+            crate::configuration::ImportSelector::Style => ImportSelector::Style,
+            crate::configuration::ImportSelector::Index => ImportSelector::Index,
+            crate::configuration::ImportSelector::Sibling => ImportSelector::Sibling,
+            crate::configuration::ImportSelector::Parent => ImportSelector::Parent,
+            crate::configuration::ImportSelector::Subpath => ImportSelector::Subpath,
+            crate::configuration::ImportSelector::Internal => ImportSelector::Internal,
+            crate::configuration::ImportSelector::Builtin => ImportSelector::Builtin,
+            crate::configuration::ImportSelector::External => ImportSelector::External,
+            crate::configuration::ImportSelector::Import => ImportSelector::Import,
+          }),
+          modifiers: g
+            .modifiers
+            .iter()
+            .map(|modifier| match modifier {
+              crate::configuration::ImportModifier::SideEffect => ImportModifier::SideEffect,
+              crate::configuration::ImportModifier::Type => ImportModifier::Type,
+              crate::configuration::ImportModifier::Value => ImportModifier::Value,
+              crate::configuration::ImportModifier::Default => ImportModifier::Default,
+              crate::configuration::ImportModifier::Wildcard => ImportModifier::Wildcard,
+              crate::configuration::ImportModifier::Named => ImportModifier::Named,
+            })
+            .collect(),
         })
         .collect(),
       newline_boundary_overrides: Vec::new(),
@@ -211,12 +249,38 @@ fn build_format_options(config: &Configuration) -> JsFormatOptions {
 
   if let Some(ref tailwindcss) = config.experimental_tailwindcss {
     options.sort_tailwindcss = Some(SortTailwindcssOptions {
-      config: tailwindcss.config.clone(),
-      stylesheet: tailwindcss.stylesheet.clone(),
       functions: tailwindcss.functions.clone(),
       attributes: tailwindcss.attributes.clone(),
       preserve_whitespace: tailwindcss.preserve_whitespace,
-      preserve_duplicates: tailwindcss.preserve_duplicates,
+    });
+  }
+
+  if let Some(ref jsdoc) = config.jsdoc {
+    options.jsdoc = Some(JsdocOptions {
+      capitalize_descriptions: jsdoc.capitalize_descriptions,
+      comment_line_strategy: jsdoc
+        .comment_line_strategy
+        .map(|strategy| match strategy {
+          crate::configuration::CommentLineStrategy::SingleLine => CommentLineStrategy::SingleLine,
+          crate::configuration::CommentLineStrategy::Multiline => CommentLineStrategy::Multiline,
+          crate::configuration::CommentLineStrategy::Keep => CommentLineStrategy::Keep,
+        })
+        .unwrap_or_default(),
+      separate_tag_groups: jsdoc.separate_tag_groups,
+      separate_returns_from_param: jsdoc.separate_returns_from_param,
+      bracket_spacing: jsdoc.bracket_spacing,
+      description_with_dot: jsdoc.description_with_dot,
+      add_default_to_description: jsdoc.add_default_to_description,
+      prefer_code_fences: jsdoc.prefer_code_fences,
+      line_wrapping_style: jsdoc
+        .line_wrapping_style
+        .map(|style| match style {
+          crate::configuration::LineWrappingStyle::Greedy => LineWrappingStyle::Greedy,
+          crate::configuration::LineWrappingStyle::Balance => LineWrappingStyle::Balance,
+        })
+        .unwrap_or_default(),
+      description_tag: jsdoc.description_tag,
+      keep_unparsable_example_indent: jsdoc.keep_unparsable_example_indent,
     });
   }
 
