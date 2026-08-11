@@ -3,7 +3,6 @@ use oxc_formatter::ArrowParentheses;
 use oxc_formatter::AttributePosition;
 use oxc_formatter::CommentLineStrategy;
 use oxc_formatter::CustomGroupDefinition;
-use oxc_formatter::EmbeddedLanguageFormatting;
 use oxc_formatter::Expand;
 use oxc_formatter::GroupEntry;
 use oxc_formatter::ImportModifier;
@@ -59,7 +58,7 @@ pub fn format_text(file_path: &Path, input_text: &str, config: &Configuration) -
   }
 
   let options = build_format_options(config);
-  let output = oxc_formatter::format_program(&allocator, &parsed.program, options, None)
+  let output = oxc_formatter::format_program(&allocator, &parsed.program, options)
     .print()
     .map_err(|e| e.to_string())?
     .into_code();
@@ -164,13 +163,6 @@ fn build_format_options(config: &Configuration) -> JsFormatOptions {
     options.expand = match expand {
       crate::configuration::Expand::Auto => Expand::Auto,
       crate::configuration::Expand::Never => Expand::Never,
-    };
-  }
-
-  if let Some(embedded_language_formatting) = config.embedded_language_formatting {
-    options.embedded_language_formatting = match embedded_language_formatting {
-      crate::configuration::EmbeddedLanguageFormatting::Auto => EmbeddedLanguageFormatting::Auto,
-      crate::configuration::EmbeddedLanguageFormatting::Off => EmbeddedLanguageFormatting::Off,
     };
   }
 

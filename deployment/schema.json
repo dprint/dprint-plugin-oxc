@@ -152,18 +152,6 @@
         "description": "Objects and arrays are never expanded, if they are shorter than the line width."
       }]
     },
-    "embeddedLanguageFormatting": {
-      "description": "Enable formatting for embedded languages (e.g., CSS, SQL, GraphQL) within template literals.",
-      "type": "string",
-      "default": "auto",
-      "oneOf": [{
-        "const": "auto",
-        "description": "Enable formatting for embedded languages."
-      }, {
-        "const": "off",
-        "description": "Disable formatting for embedded languages."
-      }]
-    },
     "experimentalOperatorPosition": {
       "description": "[EXPERIMENTAL - NOT FULLY SUPPORTED] Controls the position of operators in binary expressions when they wrap lines.",
       "type": "string",

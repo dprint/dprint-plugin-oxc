@@ -93,15 +93,6 @@ generate_str_to_from![Expand, [Auto, "auto"], [Never, "never"]];
 
 #[derive(Clone, PartialEq, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub enum EmbeddedLanguageFormatting {
-  Auto,
-  Off,
-}
-
-generate_str_to_from![EmbeddedLanguageFormatting, [Auto, "auto"], [Off, "off"]];
-
-#[derive(Clone, PartialEq, Copy, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub enum OperatorPosition {
   Start,
   End,
@@ -285,7 +276,6 @@ pub struct Configuration {
   pub bracket_same_line: Option<bool>,
   pub attribute_position: Option<AttributePosition>,
   pub expand: Option<Expand>,
-  pub embedded_language_formatting: Option<EmbeddedLanguageFormatting>,
   pub experimental_operator_position: Option<OperatorPosition>,
   pub experimental_ternaries: Option<bool>,
   pub html_whitespace_sensitivity_ignore: Option<bool>,
