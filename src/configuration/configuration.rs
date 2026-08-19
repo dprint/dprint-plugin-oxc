@@ -276,7 +276,7 @@ pub struct Configuration {
   pub bracket_same_line: Option<bool>,
   pub attribute_position: Option<AttributePosition>,
   pub expand: Option<Expand>,
-  pub experimental_operator_position: Option<OperatorPosition>,
+  pub operator_position: Option<OperatorPosition>,
   pub experimental_ternaries: Option<bool>,
   pub html_whitespace_sensitivity_ignore: Option<bool>,
   pub experimental_sort_imports: Option<SortImportsOptions>,

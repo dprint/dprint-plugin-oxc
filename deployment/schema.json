@@ -152,8 +152,8 @@
         "description": "Objects and arrays are never expanded, if they are shorter than the line width."
       }]
     },
-    "experimentalOperatorPosition": {
-      "description": "[EXPERIMENTAL - NOT FULLY SUPPORTED] Controls the position of operators in binary expressions when they wrap lines.",
+    "operatorPosition": {
+      "description": "Controls the position of operators in binary expressions when they wrap lines.",
       "type": "string",
       "default": "end",
       "oneOf": [{

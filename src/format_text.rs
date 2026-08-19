@@ -166,8 +166,8 @@ fn build_format_options(config: &Configuration) -> JsFormatOptions {
     };
   }
 
-  if let Some(operator_position) = config.experimental_operator_position {
-    options.experimental_operator_position = match operator_position {
+  if let Some(operator_position) = config.operator_position {
+    options.operator_position = match operator_position {
       crate::configuration::OperatorPosition::Start => OperatorPosition::Start,
       crate::configuration::OperatorPosition::End => OperatorPosition::End,
     };

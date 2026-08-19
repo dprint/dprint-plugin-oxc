@@ -76,7 +76,7 @@ pub fn resolve_config(
     bracket_same_line: get_nullable_value(&mut config, "bracketSameLine", &mut diagnostics),
     attribute_position: get_nullable_value(&mut config, "attributePosition", &mut diagnostics),
     expand: get_nullable_value(&mut config, "expand", &mut diagnostics),
-    experimental_operator_position: get_nullable_value(&mut config, "experimentalOperatorPosition", &mut diagnostics),
+    operator_position: get_nullable_value(&mut config, "operatorPosition", &mut diagnostics),
     experimental_ternaries: get_nullable_value(&mut config, "experimentalTernaries", &mut diagnostics),
     html_whitespace_sensitivity_ignore: get_nullable_value(
       &mut config,

@@ -1,0 +1,9 @@
+~~ operatorPosition: start, indentStyle: space, lineWidth: 40 ~~
+== should place operators at the beginning of wrapped lines ==
+const result = firstLongCondition && secondLongCondition && thirdLongCondition;
+
+[expect]
+const result =
+  firstLongCondition
+  && secondLongCondition
+  && thirdLongCondition;
