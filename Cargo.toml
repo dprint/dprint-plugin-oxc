@@ -24,7 +24,7 @@ panic = "abort"
 wasm = ["serde_json", "dprint-core/wasm"]
 
 [dependencies]
-dprint-core = { version = "0.69.0", default-features = false }
+dprint-core = { version = "0.69.1", default-features = false }
 oxc_allocator = { git = "https://github.com/oxc-project/oxc", tag = "crates_v0.146.0" }
 oxc_formatter = { git = "https://github.com/oxc-project/oxc", tag = "crates_v0.146.0" }
 oxc_formatter_core = { git = "https://github.com/oxc-project/oxc", tag = "crates_v0.146.0" }
