@@ -254,14 +254,34 @@
               "selector": {
                 "description": "The import selector that must match.",
                 "type": "string",
-                "oneOf": [{ "const": "type" }, { "const": "side_effect_style" }, { "const": "side_effect" }, { "const": "style" }, { "const": "index" }, { "const": "sibling" }, { "const": "parent" }, { "const": "subpath" }, { "const": "internal" }, { "const": "builtin" }, { "const": "external" }, { "const": "import" }]
+                "oneOf": [
+                  { "const": "type" },
+                  { "const": "side_effect_style" },
+                  { "const": "side_effect" },
+                  { "const": "style" },
+                  { "const": "index" },
+                  { "const": "sibling" },
+                  { "const": "parent" },
+                  { "const": "subpath" },
+                  { "const": "internal" },
+                  { "const": "builtin" },
+                  { "const": "external" },
+                  { "const": "import" }
+                ]
               },
               "modifiers": {
                 "description": "Import modifiers that must all be present.",
                 "type": "array",
                 "items": {
                   "type": "string",
-                  "oneOf": [{ "const": "side_effect" }, { "const": "type" }, { "const": "value" }, { "const": "default" }, { "const": "wildcard" }, { "const": "named" }]
+                  "oneOf": [
+                    { "const": "side_effect" },
+                    { "const": "type" },
+                    { "const": "value" },
+                    { "const": "default" },
+                    { "const": "wildcard" },
+                    { "const": "named" }
+                  ]
                 },
                 "default": []
               }
@@ -310,7 +330,11 @@
           "description": "How to format JSDoc comment blocks.",
           "type": "string",
           "default": "singleLine",
-          "oneOf": [{ "const": "singleLine", "description": "Convert to a single line when possible." }, { "const": "multiline", "description": "Always use multiple lines." }, { "const": "keep", "description": "Preserve the original line layout." }]
+          "oneOf": [
+            { "const": "singleLine", "description": "Convert to a single line when possible." },
+            { "const": "multiline", "description": "Always use multiple lines." },
+            { "const": "keep", "description": "Preserve the original line layout." }
+          ]
         },
         "separateTagGroups": {
           "description": "Add blank lines between different tag groups.",
@@ -346,7 +370,10 @@
           "description": "How JSDoc description lines wrap at the configured line width.",
           "type": "string",
           "default": "greedy",
-          "oneOf": [{ "const": "greedy", "description": "Always re-wrap text to fit the line width." }, { "const": "balance", "description": "Keep original line breaks when they fit." }]
+          "oneOf": [
+            { "const": "greedy", "description": "Always re-wrap text to fit the line width." },
+            { "const": "balance", "description": "Keep original line breaks when they fit." }
+          ]
         },
         "descriptionTag": {
           "description": "Emit an @description tag instead of an inline description.",
