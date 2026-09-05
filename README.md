@@ -1,6 +1,6 @@
 # dprint-plugin-oxc
 
-[![CI](https://github.com/dprint/dprint-plugin-oxc/workflows/CI/badge.svg)](https://github.com/dprint/dprint-plugin-oxc/actions?query=workflow%3ACI)
+[![npm version](https://img.shields.io/npm/v/@dprint/oxc.svg)](https://www.npmjs.com/package/@dprint/oxc) [![CI](https://github.com/dprint/dprint-plugin-oxc/workflows/CI/badge.svg)](https://github.com/dprint/dprint-plugin-oxc/actions?query=workflow%3ACI)
 
 Adapter for [Oxc](https://github.com/oxc-project/oxc) for use as a formatting plugin in [dprint](https://github.com/dprint/dprint).
 
