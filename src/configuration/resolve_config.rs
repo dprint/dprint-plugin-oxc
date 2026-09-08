@@ -126,6 +126,28 @@ fn resolve_sort_imports_options(
   let ignore_case = get_nullable_value::<bool>(&mut obj, "ignoreCase", &mut inner_diagnostics);
   let newlines_between = get_nullable_value::<bool>(&mut obj, "newlinesBetween", &mut inner_diagnostics);
 
+  let newline_boundary_overrides = obj
+    .shift_remove("newlineBoundaryOverrides")
+    .and_then(|v| v.into_array())
+    .map(|values| {
+      values
+        .into_iter()
+        .enumerate()
+        .filter_map(|(index, value)| match value {
+          ConfigKeyValue::Bool(value) => Some(Some(value)),
+          ConfigKeyValue::Null => Some(None),
+          _ => {
+            inner_diagnostics.push(ConfigurationDiagnostic {
+              property_name: format!("experimentalSortImports.newlineBoundaryOverrides.{index}"),
+              message: "Expected a boolean or null.".to_string(),
+            });
+            None
+          }
+        })
+        .collect()
+    })
+    .unwrap_or_default();
+
   // Parse internalPattern as array of strings
   let internal_pattern = obj
     .shift_remove("internalPattern")
@@ -215,6 +237,7 @@ fn resolve_sort_imports_options(
     order,
     ignore_case,
     newlines_between,
+    newline_boundary_overrides,
     internal_pattern,
     groups,
     custom_groups,

@@ -215,6 +215,14 @@
           "type": "boolean",
           "default": true
         },
+        "newlineBoundaryOverrides": {
+          "description": "Whether to insert blank lines at each boundary between import groups. A null value uses newlinesBetween.",
+          "type": "array",
+          "items": {
+            "type": ["boolean", "null"]
+          },
+          "default": []
+        },
         "internalPattern": {
           "description": "Patterns to identify internal imports.",
           "type": "array",

@@ -1,0 +1,15 @@
+~~ {"experimentalSortImports": {"groups": [["builtin"], ["external"], ["internal"]], "internalPattern": ["~/"], "newlineBoundaryOverrides": [false, true]}, "indentStyle": "space"} ~~
+== should override newlines between import groups ==
+import express from "express";
+import path from "path";
+import value from "~/value";
+
+const x = 1;
+
+[expect]
+import path from "path";
+import express from "express";
+
+import value from "~/value";
+
+const x = 1;

@@ -235,7 +235,7 @@ fn build_format_options(config: &Configuration) -> JsFormatOptions {
             .collect(),
         })
         .collect(),
-      newline_boundary_overrides: Vec::new(),
+      newline_boundary_overrides: sort_imports.newline_boundary_overrides.clone(),
     });
   }
 

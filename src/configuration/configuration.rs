@@ -200,6 +200,8 @@ pub struct SortImportsOptions {
   pub ignore_case: Option<bool>,
   pub newlines_between: Option<bool>,
   #[serde(default)]
+  pub newline_boundary_overrides: Vec<Option<bool>>,
+  #[serde(default)]
   pub internal_pattern: Vec<String>,
   #[serde(default)]
   pub groups: Vec<Vec<String>>,
