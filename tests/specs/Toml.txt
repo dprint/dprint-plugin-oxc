@@ -1,0 +1,23 @@
+-- file.toml --
+== should format ==
+# comment
+[package]
+name="test"
+version   =   "1.0.0"
+keywords=["a","b"]
+
+
+
+[dependencies]
+serde={version="1",features=["derive"]}
+
+[expect]
+# comment
+[package]
+name = "test"
+version = "1.0.0"
+keywords = ["a", "b"]
+
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }

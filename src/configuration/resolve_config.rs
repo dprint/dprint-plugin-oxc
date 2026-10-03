@@ -8,6 +8,7 @@ use super::LineEnding;
 use super::LineWrappingStyle;
 use super::SortImportsOptions;
 use super::SortOrder;
+use super::SortPackageJsonOptions;
 use super::TailwindcssOptions;
 use dprint_core::configuration::*;
 
@@ -83,10 +84,23 @@ pub fn resolve_config(
       "htmlWhitespaceSensitivityIgnore",
       &mut diagnostics,
     ),
+    prose_wrap: get_nullable_value(&mut config, "proseWrap", &mut diagnostics),
+    embedded_language_formatting: get_nullable_value(&mut config, "embeddedLanguageFormatting", &mut diagnostics),
+    insert_final_newline: get_nullable_value(&mut config, "insertFinalNewline", &mut diagnostics),
+    sort_package_json: resolve_sort_package_json_options(&mut config, &mut diagnostics),
     experimental_sort_imports: resolve_sort_imports_options(&mut config, &mut diagnostics),
     experimental_tailwindcss: resolve_tailwindcss_options(&mut config, &mut diagnostics),
     jsdoc: resolve_jsdoc_options(&mut config, &mut diagnostics),
   };
+
+  if let Some(sort_imports) = &resolved_config.experimental_sort_imports
+    && let Err(message) = crate::options::build_sort_imports_options(sort_imports).validate()
+  {
+    diagnostics.push(ConfigurationDiagnostic {
+      property_name: "sortImports".to_string(),
+      message,
+    });
+  }
 
   diagnostics.extend(get_unknown_property_diagnostics(config));
 
@@ -96,24 +110,45 @@ pub fn resolve_config(
   }
 }
 
+fn resolve_sort_package_json_options(
+  config: &mut ConfigKeyMap,
+  diagnostics: &mut Vec<ConfigurationDiagnostic>,
+) -> Option<SortPackageJsonOptions> {
+  let property_name = "sortPackageJson";
+  match config.shift_remove(property_name)? {
+    ConfigKeyValue::Bool(enabled) => Some(SortPackageJsonOptions {
+      enabled,
+      sort_scripts: false,
+    }),
+    ConfigKeyValue::Object(mut obj) => {
+      let sort_scripts = get_nullable_value(&mut obj, "sortScripts", diagnostics).unwrap_or(false);
+      for (key, _) in obj {
+        diagnostics.push(ConfigurationDiagnostic {
+          property_name: format!("{property_name}.{key}"),
+          message: "Unknown property".to_string(),
+        });
+      }
+      Some(SortPackageJsonOptions {
+        enabled: true,
+        sort_scripts,
+      })
+    }
+    ConfigKeyValue::Null => None,
+    _ => {
+      diagnostics.push(ConfigurationDiagnostic {
+        property_name: property_name.to_string(),
+        message: "expected a boolean or an object".to_string(),
+      });
+      None
+    }
+  }
+}
+
 fn resolve_sort_imports_options(
   config: &mut ConfigKeyMap,
   diagnostics: &mut Vec<ConfigurationDiagnostic>,
 ) -> Option<SortImportsOptions> {
-  let value = config.shift_remove("experimentalSortImports")?;
-
-  let obj = match value.into_object() {
-    Some(obj) => obj,
-    None => {
-      diagnostics.push(ConfigurationDiagnostic {
-        property_name: "experimentalSortImports".to_string(),
-        message: "expected an object".to_string(),
-      });
-      return None;
-    }
-  };
-
-  let mut obj = obj;
+  let (property_name, mut obj) = take_toggle_object(config, &["sortImports", "experimentalSortImports"], diagnostics)?;
   let mut inner_diagnostics = Vec::new();
 
   let partition_by_newline =
@@ -126,7 +161,7 @@ fn resolve_sort_imports_options(
   let ignore_case = get_nullable_value::<bool>(&mut obj, "ignoreCase", &mut inner_diagnostics);
   let newlines_between = get_nullable_value::<bool>(&mut obj, "newlinesBetween", &mut inner_diagnostics);
 
-  let newline_boundary_overrides = obj
+  let newline_boundary_overrides: Vec<Option<bool>> = obj
     .shift_remove("newlineBoundaryOverrides")
     .and_then(|v| v.into_array())
     .map(|values| {
@@ -138,7 +173,7 @@ fn resolve_sort_imports_options(
           ConfigKeyValue::Null => Some(None),
           _ => {
             inner_diagnostics.push(ConfigurationDiagnostic {
-              property_name: format!("experimentalSortImports.newlineBoundaryOverrides.{index}"),
+              property_name: format!("{property_name}.newlineBoundaryOverrides.{index}"),
               message: "Expected a boolean or null.".to_string(),
             });
             None
@@ -153,22 +188,13 @@ fn resolve_sort_imports_options(
     .shift_remove("internalPattern")
     .and_then(|v| v.into_array())
     .map(|arr| arr.into_iter().filter_map(|v| v.into_string()).collect::<Vec<_>>())
-    .unwrap_or_default();
+    .unwrap_or_else(|| vec!["~/".to_string(), "@/".to_string(), "#".to_string()]);
 
-  // Parse groups as array of arrays of strings
-  let groups = obj
-    .shift_remove("groups")
-    .and_then(|v| v.into_array())
-    .map(|arr| {
-      arr
-        .into_iter()
-        .filter_map(|v| {
-          v.into_array()
-            .map(|inner| inner.into_iter().filter_map(|s| s.into_string()).collect::<Vec<_>>())
-        })
-        .collect::<Vec<_>>()
-    })
-    .unwrap_or_else(|| {
+  // Parse groups, where each item is a group name, an array of group names, or a
+  // `{ "newlinesBetween": bool }` marker for the boundary between two groups
+  let (groups, marker_overrides) = match obj.shift_remove("groups").and_then(|v| v.into_array()) {
+    Some(items) => resolve_sort_imports_groups(items, &property_name, &mut inner_diagnostics),
+    None => (
       vec![
         vec!["builtin".to_string()],
         vec!["external".to_string()],
@@ -176,8 +202,15 @@ fn resolve_sort_imports_options(
         vec!["parent".to_string(), "sibling".to_string(), "index".to_string()],
         vec!["style".to_string()],
         vec!["unknown".to_string()],
-      ]
-    });
+      ],
+      Vec::new(),
+    ),
+  };
+  let newline_boundary_overrides = if marker_overrides.iter().any(Option::is_some) {
+    marker_overrides
+  } else {
+    newline_boundary_overrides
+  };
 
   // Parse customGroups as array of objects with groupName and elementNamePattern
   let custom_groups = obj
@@ -223,7 +256,7 @@ fn resolve_sort_imports_options(
   // Report unknown properties within experimentalSortImports
   for (key, _) in obj {
     inner_diagnostics.push(ConfigurationDiagnostic {
-      property_name: format!("experimentalSortImports.{}", key),
+      property_name: format!("{property_name}.{key}"),
       message: "Unknown property".to_string(),
     });
   }
@@ -248,20 +281,8 @@ fn resolve_tailwindcss_options(
   config: &mut ConfigKeyMap,
   diagnostics: &mut Vec<ConfigurationDiagnostic>,
 ) -> Option<TailwindcssOptions> {
-  let value = config.shift_remove("experimentalTailwindcss")?;
-
-  let obj = match value.into_object() {
-    Some(obj) => obj,
-    None => {
-      diagnostics.push(ConfigurationDiagnostic {
-        property_name: "experimentalTailwindcss".to_string(),
-        message: "expected an object".to_string(),
-      });
-      return None;
-    }
-  };
-
-  let mut obj = obj;
+  let (property_name, mut obj) =
+    take_toggle_object(config, &["sortTailwindcss", "experimentalTailwindcss"], diagnostics)?;
   let mut inner_diagnostics = Vec::new();
 
   let preserve_whitespace =
@@ -284,7 +305,7 @@ fn resolve_tailwindcss_options(
   // Report unknown properties within experimentalTailwindcss
   for (key, _) in obj {
     inner_diagnostics.push(ConfigurationDiagnostic {
-      property_name: format!("experimentalTailwindcss.{}", key),
+      property_name: format!("{property_name}.{key}"),
       message: "Unknown property".to_string(),
     });
   }
@@ -302,17 +323,7 @@ fn resolve_jsdoc_options(
   config: &mut ConfigKeyMap,
   diagnostics: &mut Vec<ConfigurationDiagnostic>,
 ) -> Option<JsdocOptions> {
-  let value = config.shift_remove("jsdoc")?;
-  let mut obj = match value.into_object() {
-    Some(obj) => obj,
-    None => {
-      diagnostics.push(ConfigurationDiagnostic {
-        property_name: "jsdoc".to_string(),
-        message: "expected an object".to_string(),
-      });
-      return None;
-    }
-  };
+  let (property_name, mut obj) = take_toggle_object(config, &["jsdoc"], diagnostics)?;
   let mut inner_diagnostics = Vec::new();
   let options = JsdocOptions {
     capitalize_descriptions: get_nullable_value(&mut obj, "capitalizeDescriptions", &mut inner_diagnostics)
@@ -337,10 +348,86 @@ fn resolve_jsdoc_options(
   };
   for (key, _) in obj {
     inner_diagnostics.push(ConfigurationDiagnostic {
-      property_name: format!("jsdoc.{}", key),
+      property_name: format!("{property_name}.{key}"),
       message: "Unknown property".to_string(),
     });
   }
   diagnostics.extend(inner_diagnostics);
   Some(options)
+}
+
+fn resolve_sort_imports_groups(
+  items: Vec<ConfigKeyValue>,
+  property_name: &str,
+  diagnostics: &mut Vec<ConfigurationDiagnostic>,
+) -> (Vec<Vec<String>>, Vec<Option<bool>>) {
+  let mut groups: Vec<Vec<String>> = Vec::new();
+  let mut newline_boundary_overrides = Vec::new();
+  let mut pending_override = None;
+  let mut add_diagnostic = |message: &str| {
+    diagnostics.push(ConfigurationDiagnostic {
+      property_name: format!("{property_name}.groups"),
+      message: message.to_string(),
+    });
+  };
+
+  for item in items {
+    let group = match item {
+      ConfigKeyValue::String(name) => vec![name],
+      ConfigKeyValue::Array(names) => names.into_iter().filter_map(|name| name.into_string()).collect(),
+      ConfigKeyValue::Object(mut marker) => {
+        match marker.shift_remove("newlinesBetween") {
+          Some(ConfigKeyValue::Bool(value)) if marker.is_empty() => {
+            if groups.is_empty() {
+              add_diagnostic("`{ \"newlinesBetween\" }` marker cannot appear at the start of `groups`");
+            } else if pending_override.is_some() {
+              add_diagnostic("consecutive `{ \"newlinesBetween\" }` markers are not allowed in `groups`");
+            } else {
+              pending_override = Some(value);
+            }
+          }
+          _ => add_diagnostic("expected an object item to only have a boolean `newlinesBetween` property"),
+        }
+        continue;
+      }
+      _ => {
+        add_diagnostic("expected a string, an array of strings, or a `{ \"newlinesBetween\" }` marker");
+        continue;
+      }
+    };
+    if !groups.is_empty() {
+      newline_boundary_overrides.push(pending_override.take());
+    }
+    groups.push(group);
+  }
+
+  if pending_override.is_some() {
+    add_diagnostic("`{ \"newlinesBetween\" }` marker cannot appear at the end of `groups`");
+  }
+
+  (groups, newline_boundary_overrides)
+}
+
+/// Takes an option that is either a boolean toggle or an object of options, returning
+/// the name of the property that was used along with its options when it's enabled.
+fn take_toggle_object(
+  config: &mut ConfigKeyMap,
+  property_names: &[&str],
+  diagnostics: &mut Vec<ConfigurationDiagnostic>,
+) -> Option<(String, ConfigKeyMap)> {
+  let (property_name, value) = property_names
+    .iter()
+    .find_map(|name| config.shift_remove(*name).map(|value| (name.to_string(), value)))?;
+  match value {
+    ConfigKeyValue::Object(obj) => Some((property_name, obj)),
+    ConfigKeyValue::Bool(true) => Some((property_name, ConfigKeyMap::new())),
+    ConfigKeyValue::Bool(false) | ConfigKeyValue::Null => None,
+    _ => {
+      diagnostics.push(ConfigurationDiagnostic {
+        property_name,
+        message: "expected a boolean or an object".to_string(),
+      });
+      None
+    }
+  }
 }

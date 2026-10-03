@@ -4,6 +4,22 @@
 
 Adapter for [Oxc](https://github.com/oxc-project/oxc) for use as a formatting plugin in [dprint](https://github.com/dprint/dprint).
 
+## Supported languages
+
+The plugin formats the languages that Oxc's formatter (oxfmt) formats natively in Rust:
+
+- JavaScript and TypeScript (including JSX)
+- JSON, JSONC, and JSON5
+- CSS, SCSS, and Less
+- GraphQL
+- YAML
+- Markdown
+- TOML
+
+Code embedded in these is formatted too (ex. CSS or GraphQL in a JS template literal, or YAML front matter in CSS).
+
+If you only want to use this plugin for some of these languages, list the plugins you want to format the other languages before this one in your dprint.json, since dprint formats a file with the first plugin that matches it.
+
 ## Install
 
 [Install](https://dprint.dev/install/) and [setup](https://dprint.dev/setup/) dprint.
@@ -34,6 +50,8 @@ To add configuration, specify an `"oxc"` key in your dprint.json:
 ```
 
 For an overview of the config, see https://dprint.dev/plugins/oxc/config/
+
+Like in oxfmt, the configuration is shared between the languages. For example, `quoteStyle` applies to JavaScript, CSS, YAML, and so on.
 
 Note: The plugin does not understand Oxc's configuration file because it runs sandboxed in a Wasm runtime—it has no access to the file system in order to read Oxc's config.
 

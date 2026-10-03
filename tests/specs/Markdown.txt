@@ -1,0 +1,38 @@
+-- file.md --
+!! should format !!
+#   Title
+
+* item 1
+* item 2
+
+1) one
+1) two
+
+| a | b |
+|-|-|
+| longer cell | c |
+
+Some *emphasis* and __strong__ text.
+
+```js
+const x   =   1;
+```
+
+[expect]
+# Title
+
+- item 1
+- item 2
+
+1. one
+1. two
+
+| a           | b   |
+| ----------- | --- |
+| longer cell | c   |
+
+Some _emphasis_ and **strong** text.
+
+```js
+const x   =   1;
+```

@@ -24,22 +24,13 @@ impl SyncPluginHandler<Configuration> for OxcPluginHandler {
     global_config: &GlobalConfiguration,
   ) -> PluginResolveConfigurationResult<Configuration> {
     let result = resolve_config(config, global_config);
-    let file_extensions = vec![
-      "ts".to_string(),
-      "tsx".to_string(),
-      "cts".to_string(),
-      "mts".to_string(),
-      "js".to_string(),
-      "jsx".to_string(),
-      "cjs".to_string(),
-      "mjs".to_string(),
-    ];
     PluginResolveConfigurationResult {
       config: result.config,
       diagnostics: result.diagnostics,
       file_matching: FileMatchingInfo {
-        file_extensions,
-        file_names: vec![],
+        file_extensions: crate::file_extensions(),
+        file_names: crate::file_names(),
+        additive: false,
       },
     }
   }

@@ -1,0 +1,17 @@
+-- file.css --
+== should format the front matter ==
+---
+title:   Test
+list: [a,b]
+---
+a{color:red}
+
+[expect]
+---
+title: Test
+list: [a, b]
+---
+
+a {
+  color: red;
+}

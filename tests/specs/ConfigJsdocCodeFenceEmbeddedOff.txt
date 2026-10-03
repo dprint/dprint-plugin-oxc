@@ -1,0 +1,21 @@
+-- file.ts --
+~~ {"jsdoc": true, "embeddedLanguageFormatting": "off"} ~~
+== should not format the code fences in jsdoc ==
+/**
+ * Example:
+ *
+ * ```css
+ * a{color:red}
+ * ```
+ */
+function test() {}
+
+[expect]
+/**
+ * Example:
+ *
+ * ```css
+ * a{color:red}
+ * ```
+ */
+function test() {}

@@ -1,0 +1,14 @@
+-- file.ts --
+~~ {"sortImports": {"groups": ["builtin", {"newlinesBetween": false}, "external", ["internal", "sibling"]]}} ~~
+== should use the newlines between markers ==
+import { b } from "./b";
+import fs from "node:fs";
+import { a } from "@/a";
+import react from "react";
+
+[expect]
+import fs from "node:fs";
+import react from "react";
+
+import { b } from "./b";
+import { a } from "@/a";

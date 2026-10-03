@@ -1,0 +1,12 @@
+-- composer.json --
+== should format JSON.stringify style ==
+{"name":"vendor/package","require":{"php":">=8.0"},"keywords":[]}
+
+[expect]
+{
+  "name": "vendor/package",
+  "require": {
+    "php": ">=8.0"
+  },
+  "keywords": []
+}

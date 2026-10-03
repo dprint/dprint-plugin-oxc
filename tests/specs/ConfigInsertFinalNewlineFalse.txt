@@ -1,0 +1,8 @@
+-- file.ts --
+~~ insertFinalNewline: false ~~
+== should not have a final newline ==
+const a=1;
+
+
+[expect]
+const a = 1;

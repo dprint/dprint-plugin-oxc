@@ -1,0 +1,14 @@
+-- package.json --
+~~ {"sortPackageJson": false} ~~
+== should not sort ==
+{"version":"1.0.0","scripts":{"test":"node test.js","build":"tsc"},"name":"pkg"}
+
+[expect]
+{
+  "version": "1.0.0",
+  "scripts": {
+    "test": "node test.js",
+    "build": "tsc"
+  },
+  "name": "pkg"
+}

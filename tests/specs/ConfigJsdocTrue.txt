@@ -1,0 +1,18 @@
+-- file.ts --
+~~ {"jsdoc": true} ~~
+== should format jsdoc with the default options ==
+/**
+ * description here
+ * @param {string}   a   the value
+ * @returns  the result
+ */
+function test(a) {}
+
+[expect]
+/**
+ * Description here
+ *
+ * @param {string} a The value
+ * @returns The result
+ */
+function test(a) {}

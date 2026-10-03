@@ -1,0 +1,18 @@
+-- file.json --
+== should format ==
+{"a":1,"b":[1,2,3],
+  // comment
+  "c":{"d":null,"e":"a very long string value that goes past the line width for sure", "f": true, "g": 12345},}
+
+[expect]
+{
+  "a": 1,
+  "b": [1, 2, 3],
+  // comment
+  "c": {
+    "d": null,
+    "e": "a very long string value that goes past the line width for sure",
+    "f": true,
+    "g": 12345
+  }
+}

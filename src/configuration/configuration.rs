@@ -102,6 +102,25 @@ generate_str_to_from![OperatorPosition, [Start, "start"], [End, "end"]];
 
 #[derive(Clone, PartialEq, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub enum ProseWrap {
+  Preserve,
+  Always,
+  Never,
+}
+
+generate_str_to_from![ProseWrap, [Preserve, "preserve"], [Always, "always"], [Never, "never"]];
+
+#[derive(Clone, PartialEq, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum EmbeddedLanguageFormatting {
+  Auto,
+  Off,
+}
+
+generate_str_to_from![EmbeddedLanguageFormatting, [Auto, "auto"], [Off, "off"]];
+
+#[derive(Clone, PartialEq, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum SortOrder {
   Asc,
   Desc,
@@ -221,6 +240,15 @@ pub struct CustomGroupDefinition {
   pub modifiers: Vec<ImportModifier>,
 }
 
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SortPackageJsonOptions {
+  #[serde(default = "default_true")]
+  pub enabled: bool,
+  #[serde(default)]
+  pub sort_scripts: bool,
+}
+
 #[derive(Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TailwindcssOptions {
@@ -281,6 +309,11 @@ pub struct Configuration {
   pub operator_position: Option<OperatorPosition>,
   pub experimental_ternaries: Option<bool>,
   pub html_whitespace_sensitivity_ignore: Option<bool>,
+  pub prose_wrap: Option<ProseWrap>,
+  pub embedded_language_formatting: Option<EmbeddedLanguageFormatting>,
+  pub insert_final_newline: Option<bool>,
+  /// Options for sorting `package.json` files, which are sorted when this is `None`.
+  pub sort_package_json: Option<SortPackageJsonOptions>,
   pub experimental_sort_imports: Option<SortImportsOptions>,
   pub experimental_tailwindcss: Option<TailwindcssOptions>,
   pub jsdoc: Option<JsdocOptions>,

@@ -1,0 +1,7 @@
+-- file.json5 --
+~~ quoteStyle: single, quoteProperties: consistent ~~
+== should format with config ==
+{a:"value","b-c":"other"}
+
+[expect]
+{ 'a': 'value', 'b-c': 'other' }

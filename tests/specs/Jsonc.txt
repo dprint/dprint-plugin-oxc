@@ -1,0 +1,14 @@
+-- tsconfig.jsonc --
+== should format ==
+{
+  // comment
+  "compilerOptions":{"strict":true, /* inline */ "target":"esnext",},
+  "include":["src"
+  ]}
+
+[expect]
+{
+  // comment
+  "compilerOptions": { "strict": true /* inline */, "target": "esnext" },
+  "include": ["src"],
+}

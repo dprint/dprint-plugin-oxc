@@ -1,0 +1,7 @@
+-- file.tsx --
+~~ {"sortTailwindcss": true} ~~
+== should accept a boolean ==
+const a = <div className="  p-4   m-2 " />;
+
+[expect]
+const a = <div className="p-4   m-2" />;

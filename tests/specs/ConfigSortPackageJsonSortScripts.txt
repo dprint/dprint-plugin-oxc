@@ -1,0 +1,14 @@
+-- package.json --
+~~ {"sortPackageJson": {"sortScripts": true}} ~~
+== should sort the scripts ==
+{"version":"1.0.0","scripts":{"test":"node test.js","build":"tsc"},"name":"pkg"}
+
+[expect]
+{
+  "name": "pkg",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "tsc",
+    "test": "node test.js"
+  }
+}

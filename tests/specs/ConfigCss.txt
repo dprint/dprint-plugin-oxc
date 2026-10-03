@@ -1,0 +1,18 @@
+-- file.scss --
+~~ quoteStyle: single, trailingCommas: none, indentWidth: 4, lineWidth: 40 ~~
+== should format with config ==
+@import "a";
+$map:(key1:value1,key2:value2,key3:value3,key4:value4);
+a{content:"x"}
+
+[expect]
+@import 'a';
+$map: (
+    key1: value1,
+    key2: value2,
+    key3: value3,
+    key4: value4
+);
+a {
+    content: 'x';
+}
