@@ -1,0 +1,7 @@
+-- file.tsx --
+~~ {"sortTailwindcss": true} ~~
+== should leave the classes as-is because there is no sorter ==
+const a = <div className="  p-4   m-2 " />;
+
+[expect]
+const a = <div className="  p-4   m-2 " />;

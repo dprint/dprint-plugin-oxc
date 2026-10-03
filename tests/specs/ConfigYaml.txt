@@ -1,0 +1,21 @@
+-- file.yml --
+~~ quoteStyle: single, bracketSpacing: false, trailingCommas: none, lineWidth: 20, indentWidth: 4 ~~
+== should format with config ==
+str: "double"
+flow: {a: 1, b: 2}
+long: [aaaaaaa, bbbbbbb, ccccccc, ddddddd]
+nested:
+  key: value
+
+[expect]
+str: 'double'
+flow: {a: 1, b: 2}
+long:
+    [
+        aaaaaaa,
+        bbbbbbb,
+        ccccccc,
+        ddddddd
+    ]
+nested:
+    key: value

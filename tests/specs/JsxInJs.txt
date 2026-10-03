@@ -1,0 +1,6 @@
+-- file.js --
+== should format jsx in a js file ==
+const a=<div className="a">{b}</div>;
+
+[expect]
+const a = <div className="a">{b}</div>;

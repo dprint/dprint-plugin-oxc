@@ -1,0 +1,32 @@
+-- file.ts --
+~~ {"jsdoc": true} ~~
+== should format the code fences in jsdoc ==
+/**
+ * Example:
+ *
+ * ```json
+ * {"a":1,
+ *   "b":[1,2]}
+ * ```
+ *
+ * ```css
+ * a{color:red}
+ * ```
+ */
+function test() {}
+
+[expect]
+/**
+ * Example:
+ *
+ * ```json
+ * { "a": 1, "b": [1, 2] }
+ * ```
+ *
+ * ```css
+ * a {
+ *   color: red;
+ * }
+ * ```
+ */
+function test() {}

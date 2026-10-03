@@ -1,0 +1,28 @@
+-- file.yaml --
+== should format ==
+# comment
+key:   value
+list:
+    - a
+    -   b
+flow: {a: 1,b: [1,2]}
+str: 'single'
+multi: |
+  line1
+  line2
+---
+second:  doc
+
+[expect]
+# comment
+key: value
+list:
+  - a
+  - b
+flow: { a: 1, b: [1, 2] }
+str: "single"
+multi: |
+  line1
+  line2
+---
+second: doc

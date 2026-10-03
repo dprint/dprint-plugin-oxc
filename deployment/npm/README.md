@@ -1,6 +1,6 @@
 # @dprint/oxc
 
-npm distribution of [dprint-plugin-oxc](https://github.com/dprint/dprint-plugin-oxc) which is an adapter plugin for [Oxc](https://github.com/oxc-project/oxc).
+npm distribution of [dprint-plugin-oxc](https://github.com/dprint/dprint-plugin-oxc) which is an adapter plugin for [Oxc](https://github.com/oxc-project/oxc) that formats JavaScript, TypeScript, JSON, CSS, SCSS, Less, GraphQL, YAML, and TOML.
 
 Use this with [@dprint/formatter](https://github.com/dprint/js-formatter) or just use @dprint/formatter and download the [dprint-plugin-oxc Wasm file](https://github.com/dprint/dprint-plugin-oxc/releases).
 

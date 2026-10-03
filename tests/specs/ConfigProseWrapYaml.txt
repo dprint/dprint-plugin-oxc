@@ -1,0 +1,11 @@
+-- file.yaml --
+~~ proseWrap: always, lineWidth: 40 ~~
+== should wrap prose in yaml ==
+key: >
+  This is a long line of prose that goes on for quite a while and should be wrapped.
+
+[expect]
+key: >
+  This is a long line of prose that goes
+  on for quite a while and should be
+  wrapped.

@@ -1,0 +1,15 @@
+-- file.toml --
+~~ trailingCommas: none, indentStyle: tab, lineWidth: 20 ~~
+== should format with config ==
+list=["aaaaaaaa","bbbbbbbb","cccccccc"]
+[a]
+  b=1
+
+[expect]
+list = [
+	"aaaaaaaa",
+	"bbbbbbbb",
+	"cccccccc"
+]
+[a]
+b = 1

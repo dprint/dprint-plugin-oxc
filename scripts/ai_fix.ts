@@ -3,7 +3,8 @@
  * stages that each run Codex with a different model:
  *
  *   1. a Codex agentic session edits the source and runs the checks until they
- *      pass (fixing breakage and/or wiring up new formatter options), then
+ *      pass (fixing breakage, wiring up new formatter options, and/or adding
+ *      support for languages oxc gained a formatter for), then
  *   2. a SEPARATE reviewer model reviews the result with Codex, so it can
  *      investigate (read the upstream oxc source, grep the repo). It is
  *      instructed to review only and not modify anything. If it finds blocking
@@ -13,8 +14,8 @@
  *
  * Two situations call this:
  *   - a patch bump that failed the checks (fix the breakage), and
- *   - any minor bump (review for new/renamed/removed options even when it
- *     still compiles).
+ *   - any minor bump (review for new/renamed/removed options and newly
+ *     supported languages even when it still compiles).
  *
  * Codex must NOT commit or push -- `update.ts` captures the working tree
  * changes into the existing Oxc bump commit afterwards.
@@ -84,8 +85,8 @@ function buildFixPrompt(options: AiFixOptions): string {
   const situation = checksPassed
     ? `Oxc was upgraded from ${fromVersion} to ${toVersion} (a ${
       isPatchBump ? "patch" : "minor"
-    } bump). The project already compiles and the checks pass, but a new Oxc version may have ADDED, RENAMED, or REMOVED formatter options that should be surfaced by this plugin.`
-    : `Oxc was upgraded from ${fromVersion} to ${toVersion} and the checks fail (the project no longer builds, or \`cargo test\` or \`cargo clippy\` fails). This is almost always because oxc's formatter API (its \`JsFormatOptions\` struct or related option enums) changed.`;
+    } bump). The project already compiles and the checks pass, but a new Oxc version may have ADDED, RENAMED, or REMOVED formatter options that should be surfaced by this plugin, or ADDED a formatter for a NEW LANGUAGE that this plugin should start formatting.`
+    : `Oxc was upgraded from ${fromVersion} to ${toVersion} and the checks fail (the project no longer builds, or \`cargo test\` or \`cargo clippy\` fails). This is almost always because the API of one of oxc's formatters (its options struct, related option enums, or entry point functions) changed.`;
 
   const failureOutput = checkOutput.trim().length > 0
     ? [
@@ -98,31 +99,45 @@ function buildFixPrompt(options: AiFixOptions): string {
     : [];
 
   return [
-    `You are updating the "dprint-plugin-oxc" Rust crate, a dprint plugin that wraps oxc's formatter (\`oxc_formatter\`) to format JavaScript/TypeScript.`,
+    `You are updating the "dprint-plugin-oxc" Rust crate, a dprint plugin that wraps oxc's formatters to format the same languages that oxfmt (oxc's formatter CLI) formats natively in Rust: ${describeLanguages()}.`,
     ``,
     situation,
     ...failureOutput,
     ``,
-    `Your goal: make the checks pass AND keep this plugin's configuration surface in sync with oxc's \`JsFormatOptions\`. Do NOT commit or push; only edit files in the working tree.`,
+    `Your goal: make the checks pass AND keep this plugin in sync with oxfmt, meaning (a) its configuration surface matches the options of oxc's formatters and (b) it formats every language that oxfmt formats natively in Rust. Do NOT commit or push; only edit files in the working tree.`,
     ``,
     describeWiring(),
     ``,
     `To see exactly what changed in oxc, inspect the checked-out oxc source that cargo already downloaded (oxc is a git dependency), e.g.:`,
     `  find ~/.cargo/git/checkouts -maxdepth 4 -type d -name 'oxc_formatter'`,
-    `then read the \`JsFormatOptions\` struct and the option enums in \`oxc_formatter\` (and the shared types in \`oxc_formatter_core\`). Compare that against \`build_format_options\` in \`src/format_text.rs\`.`,
+    `The directory containing it is oxc's \`crates\` directory, and oxfmt is at \`apps/oxfmt\` in the same checkout. Read:`,
+    `- the options struct and option enums of each formatter crate (\`JsFormatOptions\` in \`oxc_formatter\`, \`JsonFormatOptions\`, \`CssFormatOptions\`, \`GraphqlFormatOptions\`, \`YamlFormatOptions\`, \`MarkdownFormatOptions\`, and the shared types in \`oxc_formatter_core\`) and compare them against the \`build_*_options\` functions in \`src/options.rs\`.`,
+    `- \`apps/oxfmt/src/core/options/*.rs\` for how oxfmt maps its config onto each formatter's options, and \`apps/oxfmt/src/core/oxfmtrc.rs\` for oxfmt's config. This plugin maps its config the same way, so a shared option (ex. \`quoteStyle\`) applies to the same languages as it does in oxfmt.`,
+    `- \`apps/oxfmt/src/core/support.rs\` for the file extensions and file names oxfmt formats with each formatter, and compare them against \`src/file_kind.rs\`.`,
+    `- \`apps/oxfmt/src/core/format.rs\` and \`apps/oxfmt/src/core/embed/*.rs\` for how oxfmt calls each formatter and formats embedded code, and compare them against \`src/format_text.rs\` and \`src/embed.rs\`.`,
     ``,
     `Rules:`,
-    `1. If an option was RENAMED or REMOVED in \`JsFormatOptions\`, update the mapping in \`src/format_text.rs\` (and remove/rename the corresponding plugin config in the other files if it no longer exists upstream).`,
-    `2. If an option was ADDED in \`JsFormatOptions\`, expose it as a new plugin config option across ALL of: \`configuration.rs\`, \`resolve_config.rs\`, \`format_text.rs\`, and \`deployment/schema.json\`, AND add a spec test under \`tests/specs/\` that exercises it. Match the existing naming conventions (Rust snake_case fields, camelCase dprint keys).`,
-    `3. Do NOT edit \`README.md\`. Its config documentation is maintained separately, so leave it untouched.`,
-    `4. Preserve the existing code style. Keep non-test code above test modules. New comments start lowercase unless multiple sentences.`,
-    `5. When done, ALL of these must pass (CI denies clippy warnings, and the wasm build is what actually ships) — iterate until they are all clean:`,
+    `1. If an option was RENAMED or REMOVED in a formatter's options, update the mapping in \`src/options.rs\` (and remove/rename the corresponding plugin config in the other files if it no longer exists upstream).`,
+    `2. If an option was ADDED to a formatter's options, expose it as a new plugin config option across ALL of: \`configuration.rs\`, \`resolve_config.rs\`, \`options.rs\`, and \`deployment/schema.json\`, AND add a spec test under \`tests/specs/\` that exercises it. When oxfmt maps an existing shared config option onto the new formatter option, map this plugin's existing option the same way instead of adding a new one. Match the existing naming conventions (Rust snake_case fields, camelCase dprint keys).`,
+    `3. Check for NEW LANGUAGES. List the formatter crates (\`ls\` the \`crates\` directory for \`oxc_formatter_*\`, ignoring \`oxc_formatter_core\` and \`oxc_formatter_tests\`) and the \`FileKind\` variants in \`apps/oxfmt/src/core/support.rs\` that are formatted in Rust (ignore the ones that delegate to Prettier, which need a JS runtime this plugin does not have). For each language this plugin does not format yet, add support for it across ALL of:`,
+    `     - \`Cargo.toml\`: a dependency on the formatter crate using the SAME git tag as the other oxc crates (or the same crates.io version as oxc's workspace \`Cargo.toml\` when oxfmt uses a crate that is not in the oxc repo, like \`oxc-toml\`). If oxc's workspace \`Cargo.toml\` has a new entry under \`[patch.crates-io]\`, mirror it using the git tag.`,
+    `     - \`src/file_kind.rs\`: a \`FileKind\` variant, its classification in \`FileKind::from_path\` in the same order oxfmt checks it, and its extensions/file names in \`file_extensions()\`/\`file_names()\`.`,
+    `     - \`src/options.rs\`: a \`build_<language>_options\` function mirroring oxfmt's \`to_oxc_formatter_<language>\`.`,
+    `     - \`src/format_text.rs\`: a \`format_<language>\` function called from \`format_text\`, mirroring how oxfmt calls the formatter.`,
+    `     - \`src/embed.rs\`: a branch in the dispatcher when oxfmt's dispatcher (\`route\` in \`apps/oxfmt/src/core/embed/dispatcher.rs\`) routes the language to a Rust formatter.`,
+    `     - \`tests/specs/<Language>.txt\` for the default formatting, \`tests/specs/Config<Language>.txt\` for the config options that apply to it, and the per-language lists in the tests in \`tests/test.rs\` (parse errors, whitespace only files, line endings).`,
+    `     - \`deployment/schema.json\`: any new config options, and mention the language in the description of the shared options that now apply to it.`,
+    `     - \`scripts/ai_fix.ts\`: add the language to \`describeLanguages()\` so later updates know about it.`,
+    `   Also do this when oxfmt switches a language this plugin does not format (or formats differently) from Prettier to a Rust formatter. Likewise keep the extension and file name lists in \`src/file_kind.rs\` in sync with \`support.rs\` for the languages already supported.`,
+    `4. Do NOT edit \`README.md\` except to add a newly supported language to its list of supported languages. Its config documentation is maintained separately, so leave the rest untouched.`,
+    `5. Preserve the existing code style. Keep non-test code above test modules. New comments start lowercase unless multiple sentences.`,
+    `6. When done, ALL of these must pass (CI denies clippy warnings, and the wasm build is what actually ships) — iterate until they are all clean:`,
     `     cargo test`,
     `     cargo clippy --all-targets --all-features -- -D warnings`,
     `     cargo build --target wasm32-unknown-unknown --features wasm --release`,
-    `6. Do not change the plugin's own version in Cargo.toml, do not run git commit, and do not push.`,
+    `7. Do not change the plugin's own version in Cargo.toml, do not run git commit, and do not push.`,
     ``,
-    `Spec test format: each file in \`tests/specs/\` has a \`~~ optionKey: value ~~\` config header line, then \`== short description ==\`, the input code, a line containing \`[expect]\`, and the expected formatted output. Add or update specs for options you add or rename (follow the existing files as examples and the \`Config<Name>.txt\` naming), delete the spec for any removed option, and run \`cargo test\` to confirm they pass.`,
+    `Spec test format: each file in \`tests/specs/\` optionally starts with a \`-- file.ext --\` line that sets the file name (and so the language) of its specs, which defaults to \`file.ts\`. Then comes an optional \`~~ optionKey: value ~~\` config header line (or \`~~ { ...json } ~~\` for nested options), then \`== short description ==\` (\`!! short description !!\` in a spec whose file name ends with \`.md\`), the input code, a line containing \`[expect]\`, and the expected formatted output. Add or update specs for options you add or rename (follow the existing files as examples and the \`Config<Name>.txt\` naming), delete the spec for any removed option, and run \`cargo test\` to confirm they pass.`,
   ].join("\n");
 }
 
@@ -139,14 +154,25 @@ function buildRefixPrompt(review: ReviewResult): string {
   ].join("\n");
 }
 
+// the languages the plugin formats. Keep this in sync with `FileKind` in
+// `src/file_kind.rs` (the fixer is told to update it when adding a language).
+function describeLanguages(): string {
+  return "JavaScript/TypeScript (`oxc_formatter`), JSON/JSONC/JSON5 (`oxc_formatter_json`), CSS/SCSS/Less (`oxc_formatter_css`), GraphQL (`oxc_formatter_graphql`), YAML (`oxc_formatter_yaml`), and TOML (`oxc-toml`). It also formats Markdown (`oxc_formatter_markdown`) when the `experimentalMarkdown` config option is enabled, which is the one exception to mirroring oxfmt: oxfmt still formats Markdown with Prettier and has no `to_oxc_formatter_markdown`, so the plugin makes it opt-in and maps the options that Prettier uses for Markdown (`proseWrap` and `singleQuote`). Do not remove Markdown support or flag it as a mismatch. If oxfmt starts formatting Markdown with `oxc_formatter_markdown`, mirror how it does it (options, file extensions, embedded code) and make it formatted by default";
+}
+
 function describeWiring(): string {
   return [
     `How the plugin is wired (keep all of these consistent with each other):`,
-    `- \`src/format_text.rs\` -> \`build_format_options\` maps this plugin's \`Configuration\` onto oxc's \`JsFormatOptions\` (direct field assignment) and its option enums (\`ArrowParentheses\`, \`AttributePosition\`, \`EmbeddedLanguageFormatting\`, \`Expand\`, \`OperatorPosition\`, \`QuoteProperties\`, \`QuoteStyle\`, \`Semicolons\`, \`TrailingCommas\`, \`SortOrder\`), the \`oxc_formatter_core\` types (\`IndentStyle\`, \`IndentWidth\`, \`LineEnding\`, \`LineWidth\`), and nested option structs (\`SortImportsOptions\`, \`SortTailwindcssOptions\`, \`CustomGroupDefinition\`, \`GroupEntry\`).`,
+    `- \`Cargo.toml\` -> one git dependency per oxc crate, all on the same tag, plus a \`[patch.crates-io]\` entry that mirrors the one in oxc's workspace \`Cargo.toml\`. The crates oxfmt formats with that are not in the oxc repo (\`oxc-toml\` and \`sort-package-json\`) are crates.io dependencies that must use the same version as oxc's workspace \`Cargo.toml\`; \`scripts/update.ts\` syncs the ones listed in its \`CRATES_IO_DEPENDENCIES\`, so add any new one there.`,
+    `- \`src/file_kind.rs\` -> \`FileKind\` and \`FileKind::from_path\` decide which formatter handles a file based on its extension or name (mirroring \`apps/oxfmt/src/core/support.rs\`), and \`file_extensions()\`/\`file_names()\` are what the plugin tells dprint it formats.`,
+    `- \`src/format_text.rs\` -> \`format_text\` calls the \`format_<language>\` function of the file's \`FileKind\` (mirroring \`apps/oxfmt/src/core/format.rs\`), including \`format_package_json\`, which sorts with \`sort-package-json\` before formatting. Unlike oxfmt, \`format_toml\` returns an error when the file has a syntax error, and parse errors have the line and column appended.`,
+    `- Tailwind class sorting: \`sort_tailwindcss\` is deliberately NOT set on any formatter's options and no \`tailwind_sorter\` is installed in \`src/embed.rs\`, because oxc only collects the classes and relies on a sorter the host provides, which oxfmt implements in JS. Leave this as-is unless oxc gains a sorter implemented in Rust, in which case wire it in (set \`sort_tailwindcss\` from the plugin's \`experimental_tailwindcss\` config, install the sorter in \`src/embed.rs\`, and add specs that show classes being reordered).`,
+    `- \`src/options.rs\` -> the \`build_*_options\` functions map this plugin's \`Configuration\` onto the options of each formatter (mirroring \`apps/oxfmt/src/core/options/*.rs\`): \`build_core_options\` for the \`oxc_formatter_core\` types every formatter shares (\`IndentStyle\`, \`IndentWidth\`, \`LineEnding\`, \`LineWidth\`), \`build_js_options\` for \`JsFormatOptions\` and its option enums (\`ArrowParentheses\`, \`AttributePosition\`, \`Expand\`, \`OperatorPosition\`, \`QuoteProperties\`, \`QuoteStyle\`, \`Semicolons\`, \`TrailingCommas\`, \`SortOrder\`) and nested option structs (\`SortImportsOptions\`, \`JsdocOptions\`, \`CustomGroupDefinition\`, \`GroupEntry\`), and \`build_json_options\`, \`build_css_options\`, \`build_graphql_options\`, \`build_yaml_options\`, \`build_markdown_options\`, and \`build_toml_options\` for the other languages.`,
+    `- \`src/embed.rs\` -> the services that format code embedded in a file, like CSS in a JS template literal (mirroring the non-napi build of \`apps/oxfmt/src/core/embed\`).`,
     `- \`src/configuration/configuration.rs\` -> the plugin's own \`Configuration\` struct and enums.`,
     `- \`src/configuration/resolve_config.rs\` -> reads each dprint config key (camelCase) into \`Configuration\`.`,
     `- \`deployment/schema.json\` -> the JSON schema of config options shown to users.`,
-    `- \`tests/specs/*.txt\` -> spec tests (run by \`dprint_development::run_specs\` via \`tests/test.rs\`) that exercise each config option.`,
+    `- \`tests/specs/*.txt\` -> spec tests (run by \`dprint_development::run_specs\` via \`tests/test.rs\`) that exercise each language and config option.`,
   ].join("\n");
 }
 
@@ -210,24 +236,27 @@ async function reviewChanges(options: AiFixOptions): Promise<ReviewResult> {
 
 function buildReviewPrompt(options: AiFixOptions): string {
   return [
-    `You are an independent reviewer for dprint-plugin-oxc, a dprint plugin that wraps oxc's formatter to format JavaScript/TypeScript. Oxc was just upgraded from ${options.fromVersion} to ${options.toVersion} and another AI edited this plugin to reconcile it. Review the UNCOMMITTED working-tree changes.`,
+    `You are an independent reviewer for dprint-plugin-oxc, a dprint plugin that wraps oxc's formatters to format the same languages that oxfmt (oxc's formatter CLI) formats natively in Rust: ${describeLanguages()}. Oxc was just upgraded from ${options.fromVersion} to ${options.toVersion} and another AI edited this plugin to reconcile it. Review the UNCOMMITTED working-tree changes.`,
     `IMPORTANT: this is REVIEW ONLY. Read any files and run read-only commands (git diff, cat, grep, find, etc.) to investigate, but you MUST NOT edit, create, or delete any files, and MUST NOT run git commit or git push. Leave the working tree exactly as you found it.`,
     ``,
     `Investigate as needed:`,
     `- Run \`git --no-pager diff\` (and \`git status\`) to see exactly what changed, including any new files.`,
     `- Verify against the REAL oxc ${options.toVersion} API by reading the source cargo downloaded (oxc is a git dependency):`,
     `    find ~/.cargo/git/checkouts -maxdepth 4 -type d -name 'oxc_formatter'`,
-    `  then read the \`JsFormatOptions\` struct and option enums in \`oxc_formatter\` and \`oxc_formatter_core\`.`,
+    `  then read the options struct and option enums of each formatter crate (\`oxc_formatter\`, the other \`oxc_formatter_*\` crates beside it, and \`oxc_formatter_core\`), and oxfmt at \`apps/oxfmt/src/core\` in the same checkout (\`support.rs\` for the files each formatter handles, \`options/*.rs\` for how config maps onto each formatter's options).`,
     `- Read the plugin files to confirm they are consistent with each other and with upstream.`,
     ``,
     describeWiring(),
     ``,
     `Verify specifically:`,
-    `- Every field assigned on \`JsFormatOptions\` in \`build_format_options\` still exists with that exact name (catch removed/renamed options).`,
-    `- Any formatter option newly added upstream is exposed through ALL layers: configuration.rs, resolve_config.rs, format_text.rs, and deployment/schema.json. A partial addition is a blocking issue.`,
-    `- Every config option added or renamed in this change has a spec test under \`tests/specs/\` exercising it (and any removed option's spec is deleted). A missing spec test is a blocking issue.`,
+    `- Every field assigned on a formatter's options in the \`build_*_options\` functions in \`src/options.rs\` still exists with that exact name (catch removed/renamed options).`,
+    `- Any formatter option newly added upstream is exposed through ALL layers: configuration.rs, resolve_config.rs, options.rs, and deployment/schema.json. A partial addition is a blocking issue.`,
+    `- Every language that oxfmt ${options.toVersion} formats natively in Rust (the \`FileKind\` variants in \`apps/oxfmt/src/core/support.rs\` that do not delegate to Prettier, and the \`oxc_formatter_*\` crates) is formatted by this plugin. A language that upstream supports but the plugin is missing is a blocking issue.`,
+    `- Any language added in this change is wired through ALL layers: Cargo.toml (same git tag as the other oxc crates), src/file_kind.rs (variant, classification, and the extensions/file names reported to dprint), src/options.rs, src/format_text.rs, src/embed.rs (when oxfmt's dispatcher routes it to a Rust formatter), deployment/schema.json, spec tests under tests/specs/, and \`describeLanguages()\` in scripts/ai_fix.ts. A partial addition is a blocking issue.`,
+    `- The extensions and file names in \`src/file_kind.rs\` match the ones in oxfmt's \`support.rs\` for each language.`,
+    `- Every config option or language added or renamed in this change has a spec test under \`tests/specs/\` exercising it (and any removed option's spec is deleted). A missing spec test is a blocking issue.`,
     `- Naming conventions are consistent (Rust snake_case fields, camelCase dprint keys, matching the schema).`,
-    `- README.md was NOT modified (its documentation is maintained separately); flag any README.md change as a blocking issue.`,
+    `- README.md was NOT modified other than adding a newly supported language to its list of supported languages (its config documentation is maintained separately); flag any other README.md change as a blocking issue.`,
     `- No obvious correctness bugs, and code style matches the surrounding code.`,
     ``,
     `When done, your FINAL message must be ONLY a JSON object (no markdown code fences, no extra prose) of exactly this shape:`,

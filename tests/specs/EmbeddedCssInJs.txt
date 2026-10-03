@@ -1,0 +1,17 @@
+-- file.ts --
+== should format css in js with placeholders as scss ==
+const Button = styled.div`
+color:${color};
+&:hover{margin:${margin}px;.child{padding:0}}
+`;
+
+[expect]
+const Button = styled.div`
+  color: ${color};
+  &:hover {
+    margin: ${margin}px;
+    .child {
+      padding: 0;
+    }
+  }
+`;

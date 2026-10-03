@@ -145,9 +145,9 @@ checksum = "56254986775e3233ffa9c4d7d3faaf6d36a2c09d30b20687e9f88bc8bafc16c8"
 
 [[package]]
 name = "dprint-core"
-version = "0.69.1"
+version = "0.70.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "67359cea061dd052fca921d3589a9ce59bc16fa23bfb9d06d5c669a1dbd23915"
+checksum = "f6c66c17f6a0648b838e9a54fcf6ce2e237d060edbd3a65a724687d563fb8f28"
 dependencies = [
  "indexmap",
  "serde",
@@ -157,9 +157,9 @@ dependencies = [
 
 [[package]]
 name = "dprint-development"
-version = "0.11.0"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90b3b095f94733262261bfeb860a6550e1d656dd108240c43004bd0f1b419837"
+checksum = "b6696b3acf01bba505d35c400115ce277e6a5208ce41defa11799c53f6d02c5e"
 dependencies = [
  "console",
  "file_test_runner",
@@ -169,18 +169,25 @@ dependencies = [
 
 [[package]]
 name = "dprint-plugin-oxc"
-version = "0.41.0"
+version = "0.42.0"
 dependencies = [
  "dprint-core",
  "dprint-development",
+ "oxc-toml",
  "oxc_allocator",
+ "oxc_diagnostics",
  "oxc_formatter",
  "oxc_formatter_core",
- "oxc_parser",
+ "oxc_formatter_css",
+ "oxc_formatter_graphql",
+ "oxc_formatter_json",
+ "oxc_formatter_markdown",
+ "oxc_formatter_yaml",
  "oxc_span",
  "pretty_assertions",
  "serde",
  "serde_json",
+ "sort-package-json",
 ]
 
 [[package]]
@@ -347,6 +354,50 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 
 [[package]]
+name = "oxc-css-parser"
+version = "0.0.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8facf57774c1953389c535ba907d3d561e4ab059fa3b4413de154bbbd227e4bc"
+dependencies = [
+ "oxc_allocator",
+]
+
+[[package]]
+name = "oxc-graphql-parser"
+version = "0.0.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "432777a8667de07a380b8e7785e1871ce0b39fd180dde50923b9c128792c0d6e"
+dependencies = [
+ "memchr",
+ "oxc_allocator",
+ "thiserror",
+]
+
+[[package]]
+name = "oxc-markdown-parser"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bcffa2a1f78d39e281fd5446ab90e224d0ebf6d761413783b4445e2051049914"
+dependencies = [
+ "oxc_allocator",
+]
+
+[[package]]
+name = "oxc-toml"
+version = "0.14.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "71bca8630e33e93a38d8dceb0daba6f562f29215b47098a7f05e8d295227ed94"
+
+[[package]]
+name = "oxc-yaml-parser"
+version = "0.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "097919ec3fb73bb7ec22ceea30171c0af1f14fa67d03bd410a15dc3b6b8eff1b"
+dependencies = [
+ "oxc_allocator",
+]
+
+[[package]]
 name = "oxc_allocator"
 version = "0.152.0"
 source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.152.0#dfbc0d1ea752f021ba4a68e4703b3a9031082a46"
@@ -468,12 +519,85 @@ dependencies = [
 ]
 
 [[package]]
+name = "oxc_formatter_css"
+version = "0.70.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.152.0#dfbc0d1ea752f021ba4a68e4703b3a9031082a46"
+dependencies = [
+ "cow-utils",
+ "oxc-css-parser",
+ "oxc_allocator",
+ "oxc_diagnostics",
+ "oxc_formatter_core",
+ "oxc_formatter_tests",
+ "oxc_span",
+ "phf",
+]
+
+[[package]]
+name = "oxc_formatter_graphql"
+version = "0.70.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.152.0#dfbc0d1ea752f021ba4a68e4703b3a9031082a46"
+dependencies = [
+ "cow-utils",
+ "oxc-graphql-parser",
+ "oxc_allocator",
+ "oxc_diagnostics",
+ "oxc_formatter_core",
+ "oxc_formatter_tests",
+ "oxc_span",
+]
+
+[[package]]
+name = "oxc_formatter_json"
+version = "0.70.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.152.0#dfbc0d1ea752f021ba4a68e4703b3a9031082a46"
+dependencies = [
+ "dragonbox_ecma",
+ "oxc_allocator",
+ "oxc_ast",
+ "oxc_diagnostics",
+ "oxc_formatter_core",
+ "oxc_formatter_tests",
+ "oxc_parser",
+ "oxc_span",
+ "oxc_syntax",
+]
+
+[[package]]
+name = "oxc_formatter_markdown"
+version = "0.70.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.152.0#dfbc0d1ea752f021ba4a68e4703b3a9031082a46"
+dependencies = [
+ "cow-utils",
+ "oxc-markdown-parser",
+ "oxc_allocator",
+ "oxc_diagnostics",
+ "oxc_formatter_core",
+ "oxc_formatter_tests",
+ "oxc_span",
+]
+
+[[package]]
 name = "oxc_formatter_tests"
 version = "0.62.0"
 source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.152.0#dfbc0d1ea752f021ba4a68e4703b3a9031082a46"
 dependencies = [
  "oxc_formatter_core",
  "serde_json",
+]
+
+[[package]]
+name = "oxc_formatter_yaml"
+version = "0.70.0"
+source = "git+https://github.com/oxc-project/oxc?tag=crates_v0.152.0#dfbc0d1ea752f021ba4a68e4703b3a9031082a46"
+dependencies = [
+ "cow-utils",
+ "oxc-yaml-parser",
+ "oxc_allocator",
+ "oxc_diagnostics",
+ "oxc_formatter_core",
+ "oxc_formatter_tests",
+ "oxc_span",
 ]
 
 [[package]]
@@ -829,6 +953,16 @@ name = "smawk"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8e2fb0f499abb4d162f2bedad68f5ef91a1682b5a03596ddb67efd37768d100"
+
+[[package]]
+name = "sort-package-json"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8cfd9c8970ed7caeeb9026188b0b686854f873641317a4cf4a7c64acacbf61d3"
+dependencies = [
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "static_assertions"

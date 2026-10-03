@@ -1,0 +1,7 @@
+-- file.md --
+~~ experimentalMarkdown: true, quoteStyle: single ~~
+!! should format with config !!
+[link](http://example.com "title")
+
+[expect]
+[link](http://example.com 'title')

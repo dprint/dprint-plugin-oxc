@@ -1,0 +1,16 @@
+-- file.less --
+== should format ==
+@color:#FFF;
+.mixin(@a;@b:2){width:@a}
+.a{.mixin(1px);&:extend(.b);color:darken(@color,10%)}// comment
+
+[expect]
+@color: #fff;
+.mixin(@a;@b:2) {
+  width: @a;
+}
+.a {
+  .mixin(1px);
+  &:extend(.b);
+  color: darken(@color, 10%);
+} // comment

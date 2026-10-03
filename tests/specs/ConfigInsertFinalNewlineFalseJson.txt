@@ -1,0 +1,8 @@
+-- file.json --
+~~ insertFinalNewline: false ~~
+== should not have a final newline ==
+{"a":1}
+
+
+[expect]
+{ "a": 1 }

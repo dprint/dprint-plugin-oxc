@@ -1,0 +1,29 @@
+-- file.scss --
+== should format ==
+$map:(key1:value1,key2:value2,key3:value3,key4:value4,key5:value5,key6:value6,key7:value7,key8:value8);
+@mixin m($a,$b:10px){width:$a;&:hover{color:red}}
+.a{@include m(1px);.b &{c:d}}// comment
+
+[expect]
+$map: (
+  key1: value1,
+  key2: value2,
+  key3: value3,
+  key4: value4,
+  key5: value5,
+  key6: value6,
+  key7: value7,
+  key8: value8,
+);
+@mixin m($a, $b: 10px) {
+  width: $a;
+  &:hover {
+    color: red;
+  }
+}
+.a {
+  @include m(1px);
+  .b & {
+    c: d;
+  }
+} // comment

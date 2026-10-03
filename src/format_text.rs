@@ -1,67 +1,65 @@
-use oxc_allocator::Allocator;
-use oxc_formatter::ArrowParentheses;
-use oxc_formatter::AttributePosition;
-use oxc_formatter::CommentLineStrategy;
-use oxc_formatter::CustomGroupDefinition;
-use oxc_formatter::Expand;
-use oxc_formatter::GroupEntry;
-use oxc_formatter::ImportModifier;
-use oxc_formatter::ImportSelector;
-use oxc_formatter::JsFormatOptions;
-use oxc_formatter::JsdocOptions;
-use oxc_formatter::LineWrappingStyle;
-use oxc_formatter::OperatorPosition;
-use oxc_formatter::QuoteProperties;
-use oxc_formatter::QuoteStyle;
-use oxc_formatter::Semicolons;
-use oxc_formatter::SortImportsOptions;
-use oxc_formatter::SortOrder;
-use oxc_formatter::SortTailwindcssOptions;
-use oxc_formatter::TrailingCommas;
-use oxc_formatter_core::IndentStyle;
-use oxc_formatter_core::IndentWidth;
-use oxc_formatter_core::LineEnding;
-use oxc_formatter_core::LineWidth;
-use oxc_parser::ParseOptions;
-use oxc_parser::Parser;
-use oxc_span::SourceType;
+use std::borrow::Cow;
 use std::path::Path;
 
+use oxc_allocator::Allocator;
+use oxc_diagnostics::OxcDiagnostic;
+use oxc_formatter_core::FormatSession;
+use oxc_formatter_core::InputKind;
+use oxc_formatter_css::CssVariant;
+use oxc_formatter_json::JsonVariant;
+use oxc_span::SourceType;
+
 use crate::configuration::Configuration;
+use crate::embed::build_session_services;
+use crate::file_kind::FileKind;
+use crate::options::build_css_options;
+use crate::options::build_graphql_options;
+use crate::options::build_js_options;
+use crate::options::build_json_options;
+use crate::options::build_markdown_options;
+use crate::options::build_toml_options;
+use crate::options::build_yaml_options;
 
 type FormatError = Box<dyn std::error::Error + Send + Sync>;
 
 pub fn format_text(file_path: &Path, input_text: &str, config: &Configuration) -> Result<Option<String>, FormatError> {
-  let source_type = match SourceType::from_path(file_path) {
-    Ok(source_type) => source_type,
-    Err(_) => return Ok(None),
+  let Some(file_kind) = FileKind::from_path(file_path) else {
+    return Ok(None);
   };
 
-  let allocator = Allocator::default();
-  let parse_options = ParseOptions {
-    preserve_parens: false,
-    ..Default::default()
-  };
-  let parsed = Parser::new(&allocator, input_text, source_type)
-    .with_options(parse_options)
-    .parse();
-
-  if !parsed.diagnostics.is_empty() {
-    let mut error_text = String::new();
-    for (i, error) in parsed.diagnostics.iter().enumerate() {
-      if i > 0 {
-        error_text.push('\n');
-      }
-      error_text.push_str(&error.to_string());
-    }
-    return Err(error_text.into());
+  if file_kind == FileKind::Markdown && config.experimental_markdown != Some(true) {
+    return Ok(None);
   }
 
-  let options = build_format_options(config);
-  let output = oxc_formatter::format_program(&allocator, &parsed.program, options)
-    .print()
-    .map_err(|e| e.to_string())?
-    .into_code();
+  // a final newline is not inserted into an empty file
+  if input_text.trim().is_empty() {
+    return Ok(if input_text.is_empty() {
+      None
+    } else {
+      Some(String::new())
+    });
+  }
+
+  let mut output = match file_kind {
+    FileKind::Js(source_type) => format_js(input_text, source_type, config)?,
+    FileKind::Json(variant) => format_json(input_text, variant, config)?,
+    FileKind::PackageJson => format_package_json(input_text, config)?,
+    FileKind::Graphql => format_graphql(input_text, config)?,
+    FileKind::Css(variant) => format_css(input_text, variant, config)?,
+    FileKind::Yaml => format_yaml(input_text, config)?,
+    // these are formatted as JSON when they are JSON
+    FileKind::YamlRc => match format_json(input_text, JsonVariant::Json, config) {
+      Ok(output) => output,
+      Err(_) => format_yaml(input_text, config)?,
+    },
+    FileKind::Markdown => format_markdown(input_text, config)?,
+    FileKind::Toml => format_toml(input_text, config)?,
+  };
+
+  // every formatter ends its output with a newline
+  if config.insert_final_newline == Some(false) {
+    output.truncate(output.trim_end().len());
+  }
 
   if output == input_text {
     Ok(None)
@@ -70,213 +68,102 @@ pub fn format_text(file_path: &Path, input_text: &str, config: &Configuration) -
   }
 }
 
-fn build_format_options(config: &Configuration) -> JsFormatOptions {
-  let mut options = JsFormatOptions::default();
+fn format_js(input_text: &str, source_type: SourceType, config: &Configuration) -> Result<String, FormatError> {
+  let allocator = Allocator::default();
+  let session = FormatSession::with_services(&allocator, InputKind::PhysicalFile, build_session_services(config));
+  let formatted = oxc_formatter::format_with_session(&session, input_text, source_type, build_js_options(config))
+    .map_err(|e| to_format_error(e, input_text))?;
+  Ok(formatted.print().map_err(|e| e.to_string())?.into_code())
+}
 
-  if let Some(line_ending) = config.line_ending {
-    options.line_ending = match line_ending {
-      crate::configuration::LineEnding::Lf => LineEnding::Lf,
-      crate::configuration::LineEnding::Cr => LineEnding::Cr,
-      crate::configuration::LineEnding::Crlf => LineEnding::Crlf,
-    };
+fn format_json(input_text: &str, variant: JsonVariant, config: &Configuration) -> Result<String, FormatError> {
+  let allocator = Allocator::default();
+  let formatted = oxc_formatter_json::format(&allocator, input_text, build_json_options(config, variant))
+    .map_err(|e| to_format_error(e, input_text))?;
+  Ok(formatted.print().map_err(|e| e.to_string())?.into_code())
+}
+
+fn format_package_json(input_text: &str, config: &Configuration) -> Result<String, FormatError> {
+  let sort_options = match &config.sort_package_json {
+    Some(options) if !options.enabled => None,
+    options => Some(
+      sort_package_json::SortOptions::new()
+        .with_sort_scripts(options.as_ref().is_some_and(|options| options.sort_scripts))
+        // the text is formatted after
+        .with_pretty(false),
+    ),
+  };
+  // the sorter only handles strictly valid JSON, but the formatter is more
+  // permissive, so format without sorting instead of failing when it errors
+  let text = match sort_options.map(|options| sort_package_json::sort_package_json_with_options(input_text, &options)) {
+    Some(Ok(sorted_text)) => Cow::Owned(sorted_text),
+    Some(Err(_)) | None => Cow::Borrowed(input_text),
+  };
+  format_json(&text, JsonVariant::JsonStringify, config)
+}
+
+fn format_graphql(input_text: &str, config: &Configuration) -> Result<String, FormatError> {
+  let allocator = Allocator::default();
+  let formatted = oxc_formatter_graphql::format(&allocator, input_text, build_graphql_options(config))
+    .map_err(|e| to_format_error(e, input_text))?;
+  Ok(formatted.print().map_err(|e| e.to_string())?.into_code())
+}
+
+fn format_css(input_text: &str, variant: CssVariant, config: &Configuration) -> Result<String, FormatError> {
+  let allocator = Allocator::default();
+  // the services are what format the front matter
+  let session = FormatSession::with_services(&allocator, InputKind::PhysicalFile, build_session_services(config));
+  let formatted = oxc_formatter_css::format_with_session(&session, input_text, build_css_options(config, variant))
+    .map_err(|e| to_format_error(e, input_text))?;
+  Ok(formatted.print().map_err(|e| e.to_string())?.into_code())
+}
+
+fn format_yaml(input_text: &str, config: &Configuration) -> Result<String, FormatError> {
+  let allocator = Allocator::default();
+  let formatted = oxc_formatter_yaml::format(&allocator, input_text, build_yaml_options(config))
+    .map_err(|e| to_format_error(e, input_text))?;
+  Ok(formatted.print().map_err(|e| e.to_string())?.into_code())
+}
+
+fn format_markdown(input_text: &str, config: &Configuration) -> Result<String, FormatError> {
+  let allocator = Allocator::default();
+  let formatted = oxc_formatter_markdown::format(&allocator, input_text, build_markdown_options(config))
+    .map_err(|e| to_format_error(e, input_text))?;
+  Ok(formatted.print().map_err(|e| e.to_string())?.into_code())
+}
+
+fn format_toml(input_text: &str, config: &Configuration) -> Result<String, FormatError> {
+  // the formatter doesn't fail on a syntax error and instead leaves that part of the
+  // file as-is, which is not stable, so fail the same way the other languages do
+  if let Some(error) = oxc_toml::parse(input_text).errors.first() {
+    let (line, column) = line_and_column(input_text, error.range.start as usize);
+    return Err(format!("{} (line {}, column {})", error.message, line, column).into());
   }
+  Ok(oxc_toml::format(input_text, build_toml_options(config)))
+}
 
-  if let Some(indent_style) = config.indent_style {
-    options.indent_style = match indent_style {
-      crate::configuration::IndentStyle::Tab => IndentStyle::Tab,
-      crate::configuration::IndentStyle::Space => IndentStyle::Space,
-    };
+fn to_format_error(diagnostic: OxcDiagnostic, text: &str) -> FormatError {
+  match diagnostic.labels.first() {
+    Some(label) => {
+      let (line, column) = line_and_column(text, label.offset() as usize);
+      format!("{} (line {}, column {})", diagnostic, line, column).into()
+    }
+    None => diagnostic.to_string().into(),
   }
+}
 
-  if let Some(value) = config.indent_width
-    && let Ok(width) = IndentWidth::try_from(value)
-  {
-    options.indent_width = width;
+/// Gets the 1-indexed line and column of the byte offset in the text.
+fn line_and_column(text: &str, offset: usize) -> (usize, usize) {
+  let mut offset = offset.min(text.len());
+  while !text.is_char_boundary(offset) {
+    offset -= 1;
   }
-
-  if let Some(value) = config.line_width
-    && let Ok(width) = LineWidth::try_from(value)
-  {
-    options.line_width = width;
-  }
-
-  if let Some(semicolons) = config.semicolons {
-    options.semicolons = match semicolons {
-      crate::configuration::Semicolons::Always => Semicolons::Always,
-      crate::configuration::Semicolons::AsNeeded => Semicolons::AsNeeded,
-    };
-  }
-
-  if let Some(quote_style) = config.quote_style {
-    options.quote_style = match quote_style {
-      crate::configuration::QuoteStyle::Single => QuoteStyle::Single,
-      crate::configuration::QuoteStyle::Double => QuoteStyle::Double,
-    };
-  }
-
-  if let Some(quote_style) = config.jsx_quote_style {
-    options.jsx_quote_style = match quote_style {
-      crate::configuration::QuoteStyle::Single => QuoteStyle::Single,
-      crate::configuration::QuoteStyle::Double => QuoteStyle::Double,
-    };
-  }
-
-  if let Some(quote_properties) = config.quote_properties {
-    options.quote_properties = match quote_properties {
-      crate::configuration::QuoteProperties::AsNeeded => QuoteProperties::AsNeeded,
-      crate::configuration::QuoteProperties::Preserve => QuoteProperties::Preserve,
-      crate::configuration::QuoteProperties::Consistent => QuoteProperties::Consistent,
-    };
-  }
-
-  if let Some(arrow_parens) = config.arrow_parentheses {
-    options.arrow_parentheses = match arrow_parens {
-      crate::configuration::ArrowParentheses::Always => ArrowParentheses::Always,
-      crate::configuration::ArrowParentheses::AsNeeded => ArrowParentheses::AsNeeded,
-    };
-  }
-
-  if let Some(trailing_commas) = config.trailing_commas {
-    options.trailing_commas = match trailing_commas {
-      crate::configuration::TrailingCommas::All => TrailingCommas::All,
-      crate::configuration::TrailingCommas::Es5 => TrailingCommas::Es5,
-      crate::configuration::TrailingCommas::None => TrailingCommas::None,
-    };
-  }
-
-  if let Some(bracket_spacing) = config.bracket_spacing {
-    options.bracket_spacing = bracket_spacing.into();
-  }
-
-  if let Some(bracket_same_line) = config.bracket_same_line {
-    options.bracket_same_line = bracket_same_line.into();
-  }
-
-  if let Some(attribute_position) = config.attribute_position {
-    options.attribute_position = match attribute_position {
-      crate::configuration::AttributePosition::Auto => AttributePosition::Auto,
-      crate::configuration::AttributePosition::Multiline => AttributePosition::Multiline,
-    };
-  }
-
-  if let Some(expand) = config.expand {
-    options.expand = match expand {
-      crate::configuration::Expand::Auto => Expand::Auto,
-      crate::configuration::Expand::Never => Expand::Never,
-    };
-  }
-
-  if let Some(operator_position) = config.operator_position {
-    options.operator_position = match operator_position {
-      crate::configuration::OperatorPosition::Start => OperatorPosition::Start,
-      crate::configuration::OperatorPosition::End => OperatorPosition::End,
-    };
-  }
-
-  if let Some(experimental_ternaries) = config.experimental_ternaries {
-    options.experimental_ternaries = experimental_ternaries;
-  }
-
-  if let Some(html_whitespace_sensitivity_ignore) = config.html_whitespace_sensitivity_ignore {
-    options.html_whitespace_sensitivity_ignore = html_whitespace_sensitivity_ignore;
-  }
-
-  if let Some(ref sort_imports) = config.experimental_sort_imports {
-    options.sort_imports = Some(SortImportsOptions {
-      partition_by_newline: sort_imports.partition_by_newline,
-      partition_by_comment: sort_imports.partition_by_comment,
-      sort_side_effects: sort_imports.sort_side_effects,
-      order: sort_imports
-        .order
-        .map(|o| match o {
-          crate::configuration::SortOrder::Asc => SortOrder::Asc,
-          crate::configuration::SortOrder::Desc => SortOrder::Desc,
-        })
-        .unwrap_or_default(),
-      ignore_case: sort_imports.ignore_case.unwrap_or(true),
-      newlines_between: sort_imports.newlines_between.unwrap_or(true),
-      internal_pattern: sort_imports.internal_pattern.clone(),
-      groups: sort_imports
-        .groups
-        .iter()
-        .map(|group| group.iter().map(|s| GroupEntry::parse(s)).collect())
-        .collect(),
-      custom_groups: sort_imports
-        .custom_groups
-        .iter()
-        .map(|g| CustomGroupDefinition {
-          group_name: g.group_name.clone(),
-          element_name_pattern: g.element_name_pattern.clone(),
-          selector: g.selector.map(|selector| match selector {
-            crate::configuration::ImportSelector::Type => ImportSelector::Type,
-            crate::configuration::ImportSelector::SideEffectStyle => ImportSelector::SideEffectStyle,
-            crate::configuration::ImportSelector::SideEffect => ImportSelector::SideEffect,
-            crate::configuration::ImportSelector::Style => ImportSelector::Style,
-            crate::configuration::ImportSelector::Index => ImportSelector::Index,
-            crate::configuration::ImportSelector::Sibling => ImportSelector::Sibling,
-            crate::configuration::ImportSelector::Parent => ImportSelector::Parent,
-            crate::configuration::ImportSelector::Subpath => ImportSelector::Subpath,
-            crate::configuration::ImportSelector::Internal => ImportSelector::Internal,
-            crate::configuration::ImportSelector::Builtin => ImportSelector::Builtin,
-            crate::configuration::ImportSelector::External => ImportSelector::External,
-            crate::configuration::ImportSelector::Import => ImportSelector::Import,
-          }),
-          modifiers: g
-            .modifiers
-            .iter()
-            .map(|modifier| match modifier {
-              crate::configuration::ImportModifier::SideEffect => ImportModifier::SideEffect,
-              crate::configuration::ImportModifier::Type => ImportModifier::Type,
-              crate::configuration::ImportModifier::Value => ImportModifier::Value,
-              crate::configuration::ImportModifier::Default => ImportModifier::Default,
-              crate::configuration::ImportModifier::Wildcard => ImportModifier::Wildcard,
-              crate::configuration::ImportModifier::Named => ImportModifier::Named,
-            })
-            .collect(),
-        })
-        .collect(),
-      newline_boundary_overrides: sort_imports.newline_boundary_overrides.clone(),
-    });
-  }
-
-  if let Some(ref tailwindcss) = config.experimental_tailwindcss {
-    options.sort_tailwindcss = Some(SortTailwindcssOptions {
-      functions: tailwindcss.functions.clone(),
-      attributes: tailwindcss.attributes.clone(),
-      preserve_whitespace: tailwindcss.preserve_whitespace,
-    });
-  }
-
-  if let Some(ref jsdoc) = config.jsdoc {
-    options.jsdoc = Some(JsdocOptions {
-      capitalize_descriptions: jsdoc.capitalize_descriptions,
-      comment_line_strategy: jsdoc
-        .comment_line_strategy
-        .map(|strategy| match strategy {
-          crate::configuration::CommentLineStrategy::SingleLine => CommentLineStrategy::SingleLine,
-          crate::configuration::CommentLineStrategy::Multiline => CommentLineStrategy::Multiline,
-          crate::configuration::CommentLineStrategy::Keep => CommentLineStrategy::Keep,
-        })
-        .unwrap_or_default(),
-      separate_tag_groups: jsdoc.separate_tag_groups,
-      separate_returns_from_param: jsdoc.separate_returns_from_param,
-      bracket_spacing: jsdoc.bracket_spacing,
-      description_with_dot: jsdoc.description_with_dot,
-      add_default_to_description: jsdoc.add_default_to_description,
-      prefer_code_fences: jsdoc.prefer_code_fences,
-      line_wrapping_style: jsdoc
-        .line_wrapping_style
-        .map(|style| match style {
-          crate::configuration::LineWrappingStyle::Greedy => LineWrappingStyle::Greedy,
-          crate::configuration::LineWrappingStyle::Balance => LineWrappingStyle::Balance,
-        })
-        .unwrap_or_default(),
-      description_tag: jsdoc.description_tag,
-      keep_unparsable_example_indent: jsdoc.keep_unparsable_example_indent,
-    });
-  }
-
-  options
+  let before = &text[..offset];
+  let line_start = before.rfind('\n').map(|index| index + 1).unwrap_or(0);
+  (
+    before.matches('\n').count() + 1,
+    before[line_start..].chars().count() + 1,
+  )
 }
 
 #[cfg(test)]

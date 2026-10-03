@@ -1,0 +1,16 @@
+-- file.ts --
+~~ {"sortImports": true, "indentStyle": "space"} ~~
+== should sort imports with the default options ==
+import { b } from "./b";
+import fs from "node:fs";
+import { a } from "@/a";
+import react from "react";
+
+[expect]
+import fs from "node:fs";
+
+import react from "react";
+
+import { a } from "@/a";
+
+import { b } from "./b";

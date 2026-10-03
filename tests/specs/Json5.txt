@@ -1,0 +1,11 @@
+-- file.json5 --
+== should format ==
+{unquoted:'value',"quoted-key":"other", list:[1,2,], // comment
+}
+
+[expect]
+{
+  unquoted: "value",
+  "quoted-key": "other",
+  list: [1, 2], // comment
+}

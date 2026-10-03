@@ -1,0 +1,17 @@
+-- package.json --
+== should sort and format ==
+{"version":"1.0.0","scripts":{"test":"node test.js","build":"tsc"},"dependencies":{"b":"1","a":"2"},"name":"pkg"}
+
+[expect]
+{
+  "name": "pkg",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "node test.js",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "a": "2",
+    "b": "1"
+  }
+}

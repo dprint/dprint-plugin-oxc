@@ -1,0 +1,14 @@
+-- .prettierrc --
+== should format as json when json ==
+{"semi":false,"singleQuote":true}
+
+[expect]
+{ "semi": false, "singleQuote": true }
+
+== should format as yaml otherwise ==
+semi:   false
+singleQuote:    true
+
+[expect]
+semi: false
+singleQuote: true

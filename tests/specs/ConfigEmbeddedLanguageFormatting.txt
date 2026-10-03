@@ -1,0 +1,19 @@
+-- file.ts --
+== should format embedded code by default ==
+const style = css`a{color:red;margin:0}`;
+const query = gql`query{user{name}}`;
+
+[expect]
+const style = css`
+  a {
+    color: red;
+    margin: 0;
+  }
+`;
+const query = gql`
+  query {
+    user {
+      name
+    }
+  }
+`;

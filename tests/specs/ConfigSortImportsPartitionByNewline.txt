@@ -1,0 +1,14 @@
+~~ {"sortImports": {"partitionByNewline": true}, "indentStyle": "space"} ~~
+== should sort within the groups separated by a blank line ==
+import { d } from "d";
+import { c } from "c";
+
+import { b } from "b";
+import { a } from "a";
+
+[expect]
+import { c } from "c";
+import { d } from "d";
+
+import { a } from "a";
+import { b } from "b";

@@ -1,0 +1,18 @@
+-- file.scss --
+~~ embeddedLanguageFormatting: off ~~
+== should not format the front matter ==
+---
+title:   Test
+---
+a{b{color:red}}
+
+[expect]
+---
+title:   Test
+---
+
+a {
+  b {
+    color: red;
+  }
+}

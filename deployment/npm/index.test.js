@@ -10,3 +10,17 @@ const result = formatter.formatText({
 });
 
 assert.strictEqual(result, "console.log(5);\n");
+
+// ensure the other formatters work in the Wasm build
+for (
+  const [filePath, fileText, expected] of [
+    ["file.json", "{\"a\":1}", "{ \"a\": 1 }\n"],
+    ["file.css", "a{b:c}", "a {\n  b: c;\n}\n"],
+    ["file.graphql", "{a}", "{\n  a\n}\n"],
+    ["file.yaml", "a:   1", "a: 1\n"],
+    ["file.toml", "a=1", "a = 1\n"],
+    ["file.ts", "const a = css`a{b:c}`;", "const a = css`\n  a {\n    b: c;\n  }\n`;\n"],
+  ]
+) {
+  assert.strictEqual(formatter.formatText({ filePath, fileText }), expected, filePath);
+}

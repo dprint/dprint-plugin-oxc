@@ -1,0 +1,14 @@
+-- file.jsonc --
+~~ trailingCommas: none, bracketSpacing: false, indentStyle: tab, lineWidth: 20 ~~
+== should format with config ==
+{"a":{"b":1},"list":[1,2,3,4,5,6,7,8,9,10,11,12]}
+
+[expect]
+{
+	"a": {"b": 1},
+	"list": [
+		1, 2, 3, 4, 5,
+		6, 7, 8, 9, 10,
+		11, 12
+	]
+}

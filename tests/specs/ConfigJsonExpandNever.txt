@@ -1,0 +1,9 @@
+-- file.json --
+~~ expand: never ~~
+== should collapse objects ==
+{
+  "a": 1, "b": { 
+ "c": 2 }}
+
+[expect]
+{ "a": 1, "b": { "c": 2 } }
