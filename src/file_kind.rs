@@ -29,24 +29,28 @@ impl FileKind {
   /// Gets the kind of the file at the provided path or `None` when the
   /// file is not one that should be formatted.
   pub fn from_path(path: &Path) -> Option<FileKind> {
+    // dprint matches file names and extensions case insensitively, so the
+    // file is classified that way too in order to format every matched file
+    let file_name = path.file_name().and_then(|f| f.to_str())?.to_ascii_lowercase();
+    let file_name = file_name.as_str();
+    let path = Path::new(file_name);
+
     if let Ok(source_type) = SourceType::from_path(path) {
       return Some(FileKind::Js(source_type));
     }
 
-    let file_name = path.file_name().and_then(|f| f.to_str())?;
-
     // machine generated files that should never be reformatted
-    if EXCLUDE_FILE_NAMES.contains(&file_name) {
+    if contains(EXCLUDE_FILE_NAMES, file_name) {
       return None;
     }
 
     let extension = path.extension().and_then(|ext| ext.to_str());
-    let has_extension = |extensions: &[&str]| extension.is_some_and(|ext| extensions.contains(&ext));
+    let has_extension = |extensions: &[&str]| extension.is_some_and(|ext| contains(extensions, ext));
 
     if is_extra_js_file(file_name, extension) {
       return Some(FileKind::Js(SourceType::default()));
     }
-    if TOML_FILE_NAMES.contains(&file_name) || extension == Some("toml") || file_name.ends_with(".toml.example") {
+    if contains(TOML_FILE_NAMES, file_name) || extension == Some("toml") || file_name.ends_with(".toml.example") {
       return Some(FileKind::Toml);
     }
     if file_name == "package.json" {
@@ -55,7 +59,7 @@ impl FileKind {
     if file_name == "composer.json" || extension == Some("importmap") {
       return Some(FileKind::Json(JsonVariant::JsonStringify));
     }
-    if JSON_FILE_NAMES.contains(&file_name)
+    if contains(JSON_FILE_NAMES, file_name)
       || has_extension(JSON_EXTENSIONS)
       || file_name.ends_with(".json.example")
       || file_name.ends_with(".tfstate.backup")
@@ -80,13 +84,13 @@ impl FileKind {
       _ => {}
     }
     // check these before the generic YAML check because they're formatted as JSON first
-    if YAML_RC_FILE_NAMES.contains(&file_name) {
+    if contains(YAML_RC_FILE_NAMES, file_name) {
       return Some(FileKind::YamlRc);
     }
-    if YAML_FILE_NAMES.contains(&file_name) || has_extension(YAML_EXTENSIONS) {
+    if contains(YAML_FILE_NAMES, file_name) || has_extension(YAML_EXTENSIONS) {
       return Some(FileKind::Yaml);
     }
-    if MARKDOWN_FILE_NAMES.contains(&file_name) || has_extension(MARKDOWN_EXTENSIONS) {
+    if contains(MARKDOWN_FILE_NAMES, file_name) || has_extension(MARKDOWN_EXTENSIONS) {
       return Some(FileKind::Markdown);
     }
     None
@@ -138,13 +142,13 @@ fn markdown_only(config: &Configuration, items: &'static [&'static str]) -> &'st
 }
 
 fn is_extra_js_file(file_name: &str, extension: Option<&str>) -> bool {
-  if JS_FILE_NAMES.contains(&file_name) {
+  if contains(JS_FILE_NAMES, file_name) {
     return true;
   }
   let Some(extension) = extension else {
     return false;
   };
-  if ADDITIONAL_JS_EXTENSIONS.contains(&extension) {
+  if contains(ADDITIONAL_JS_EXTENSIONS, extension) {
     return true;
   }
   // only `*.start.frag` and `*.end.frag` are JS
@@ -155,6 +159,15 @@ fn is_extra_js_file(file_name: &str, extension: Option<&str>) -> bool {
   false
 }
 
+fn contains(items: &[&str], value: &str) -> bool {
+  items.iter().any(|item| item.eq_ignore_ascii_case(value))
+}
+
+// A few of the files that are classified above can't be described to dprint by an
+// extension or file name without also matching files the plugin doesn't format
+// (`*.json.example`, `*.toml.example`, `*.tfstate.backup`, `*.start.frag`, and
+// `*.end.frag`), so those are only formatted when associated with the plugin.
+//
 // The lists below are kept in sync with oxfmt's (see `apps/oxfmt/src/core/support.rs`
 // in the oxc repo), which are in turn derived from what Prettier supports.
 
@@ -332,6 +345,22 @@ mod test {
     assert_eq!(kind("Cargo.toml"), Some(FileKind::Toml));
     assert_eq!(kind("Pipfile"), Some(FileKind::Toml));
     assert_eq!(kind("file.txt"), None);
+  }
+
+  #[test]
+  fn classifies_files_case_insensitively() {
+    let kind = |path: &str| FileKind::from_path(Path::new(path));
+    assert!(matches!(kind("File.TS"), Some(FileKind::Js(_))));
+    assert!(matches!(kind("jakefile"), Some(FileKind::Js(_))));
+    assert_eq!(kind("FILE.JSON"), Some(FileKind::Json(JsonVariant::Json)));
+    assert_eq!(kind("form.4dform"), Some(FileKind::Json(JsonVariant::Json)));
+    assert_eq!(kind("Package.JSON"), Some(FileKind::PackageJson));
+    assert_eq!(kind("STYLE.SCSS"), Some(FileKind::Css(CssVariant::Scss)));
+    assert_eq!(kind("citation.CFF"), Some(FileKind::Yaml));
+    assert_eq!(kind("pipfile"), Some(FileKind::Toml));
+    assert_eq!(kind("README.MD"), Some(FileKind::Markdown));
+    assert_eq!(kind("readme"), Some(FileKind::Markdown));
+    assert_eq!(kind("CARGO.LOCK"), None);
   }
 
   #[test]

@@ -1,5 +1,5 @@
 -- file.graphql --
-~~ bracketSpacing: false, lineWidth: 60, indentWidth: 4 ~~
+~~ bracketSpacing: false, indentWidth: 4 ~~
 == should format with config ==
 query{user(filter:{name:"a",age:1}){name friends{name}}}
 

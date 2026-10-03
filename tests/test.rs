@@ -52,8 +52,12 @@ fn should_fail_on_parse_error_other_languages() {
     ("file.json", "{ \"a\": }"),
     ("package.json", "{ \"a\": }"),
     ("file.graphql", "query {"),
+    ("file.jsonc", "{ \"a\": }"),
+    ("file.json5", "{ a: }"),
     ("file.css", "a { color: red"),
     ("file.scss", "a { b: { }"),
+    ("file.less", "a { b: { }"),
+    ("file.toml", "a = = 1"),
     ("file.yaml", "a: [1, 2"),
     (".prettierrc", "a: [1, 2"),
   ] {
@@ -174,10 +178,35 @@ fn should_have_diagnostics_for_invalid_config() {
       serde_json::json!({ "embeddedLanguageFormatting": "on" }),
       "embeddedLanguageFormatting",
     ),
+    (
+      serde_json::json!({ "sortPackageJson": true, "experimentalSortPackageJson": false }),
+      "experimentalSortPackageJson",
+    ),
+    (
+      serde_json::json!({ "sortImports": true, "experimentalSortImports": { "order": "desc" } }),
+      "experimentalSortImports",
+    ),
+    (
+      serde_json::json!({ "sortTailwindcss": true, "experimentalTailwindcss": {} }),
+      "experimentalTailwindcss",
+    ),
+    (
+      serde_json::json!({
+        "sortImports": {
+          "groups": ["builtin", { "newlinesBetween": false }, "external"],
+          "newlineBoundaryOverrides": [true],
+        },
+      }),
+      "sortImports.newlineBoundaryOverrides",
+    ),
     // these are the combinations that oxc itself rejects
     (
-      serde_json::json!({ "sortImports": { "partitionByNewline": true } }),
+      serde_json::json!({ "sortImports": { "partitionByNewline": true, "newlinesBetween": true } }),
       "sortImports",
+    ),
+    (
+      serde_json::json!({ "experimentalSortImports": { "newlineBoundaryOverrides": [false] } }),
+      "experimentalSortImports",
     ),
     (
       serde_json::json!({ "sortImports": { "groups": ["builtin", "not-a-group"] } }),
@@ -199,6 +228,75 @@ fn should_have_diagnostics_for_invalid_config() {
       "{config}"
     );
   }
+}
+
+#[test]
+fn should_resolve_aliases() {
+  // a null value is the same as the option not being set
+  let result = resolve(serde_json::json!({
+    "sortImports": null,
+    "experimentalSortImports": { "order": "desc" },
+    "sortPackageJson": null,
+    "experimentalSortPackageJson": false,
+  }));
+  assert!(result.diagnostics.is_empty());
+  assert!(result.config.experimental_sort_imports.is_some());
+  assert!(result.config.sort_package_json.is_some_and(|options| !options.enabled));
+}
+
+#[test]
+fn should_not_have_newlines_between_by_default_when_partitioning_by_newline() {
+  let result = resolve(serde_json::json!({ "experimentalSortImports": { "partitionByNewline": true } }));
+  assert!(result.diagnostics.is_empty());
+  assert_eq!(
+    result.config.experimental_sort_imports.unwrap().newlines_between,
+    Some(false)
+  );
+}
+
+#[test]
+fn should_have_position_in_parse_errors() {
+  let config = Configuration::default();
+  for (file_name, text, expected) in [
+    ("file.ts", "const a = 1;\nconst = ;\n", "(line 2, column 7)"),
+    ("file.json", "{\n  \"a\": 1,\n  \"b\": }\n", "(line 3, column 8)"),
+    ("file.yaml", "a: 1\nb: [1, 2\n", "(line 3, column 1)"),
+    ("file.toml", "a = 1\nb = = 2\n", "(line 2, column 5)"),
+  ] {
+    let err = format_text(&PathBuf::from(file_name), text, &config).unwrap_err();
+    assert!(err.to_string().ends_with(expected), "{file_name}: {err}");
+  }
+}
+
+#[test]
+fn should_format_files_matched_case_insensitively() {
+  let config = Configuration::default();
+  for (file_name, text, expected) in [
+    ("FILE.TS", "a", "a;\n"),
+    ("File.JSON", "[1,2]", "[1, 2]\n"),
+    ("STYLE.CSS", "a{b:c}", "a {\n  b: c;\n}\n"),
+    ("CONFIG.YML", "a:   1", "a: 1\n"),
+    ("pipfile", "a=1", "a = 1\n"),
+  ] {
+    let result = format_text(&PathBuf::from(file_name), text, &config).unwrap();
+    assert_eq!(result.as_deref(), Some(expected), "{file_name}");
+  }
+}
+
+#[test]
+fn should_format_package_json_without_sorting_when_the_sorter_fails() {
+  // the sorter only accepts strictly valid json, but the formatter accepts more
+  let config = Configuration::default();
+  let result = format_text(
+    &PathBuf::from("package.json"),
+    "{version:\"1\",\"name\":\"a\",}",
+    &config,
+  )
+  .unwrap();
+  assert_eq!(
+    result.as_deref(),
+    Some("{\n  \"version\": \"1\",\n  \"name\": \"a\"\n}\n")
+  );
 }
 
 fn resolve(config: serde_json::Value) -> ResolveConfigurationResult<Configuration> {

@@ -2,6 +2,7 @@ use std::borrow::Cow;
 use std::path::Path;
 
 use oxc_allocator::Allocator;
+use oxc_diagnostics::OxcDiagnostic;
 use oxc_formatter_core::FormatSession;
 use oxc_formatter_core::InputKind;
 use oxc_formatter_css::CssVariant;
@@ -52,7 +53,7 @@ pub fn format_text(file_path: &Path, input_text: &str, config: &Configuration) -
       Err(_) => format_yaml(input_text, config)?,
     },
     FileKind::Markdown => format_markdown(input_text, config)?,
-    FileKind::Toml => oxc_toml::format(input_text, build_toml_options(config)),
+    FileKind::Toml => format_toml(input_text, config)?,
   };
 
   // every formatter ends its output with a newline
@@ -71,14 +72,14 @@ fn format_js(input_text: &str, source_type: SourceType, config: &Configuration) 
   let allocator = Allocator::default();
   let session = FormatSession::with_services(&allocator, InputKind::PhysicalFile, build_session_services(config));
   let formatted = oxc_formatter::format_with_session(&session, input_text, source_type, build_js_options(config))
-    .map_err(|e| e.to_string())?;
+    .map_err(|e| to_format_error(e, input_text))?;
   Ok(formatted.print().map_err(|e| e.to_string())?.into_code())
 }
 
 fn format_json(input_text: &str, variant: JsonVariant, config: &Configuration) -> Result<String, FormatError> {
   let allocator = Allocator::default();
   let formatted = oxc_formatter_json::format(&allocator, input_text, build_json_options(config, variant))
-    .map_err(|e| e.to_string())?;
+    .map_err(|e| to_format_error(e, input_text))?;
   Ok(formatted.print().map_err(|e| e.to_string())?.into_code())
 }
 
@@ -103,8 +104,8 @@ fn format_package_json(input_text: &str, config: &Configuration) -> Result<Strin
 
 fn format_graphql(input_text: &str, config: &Configuration) -> Result<String, FormatError> {
   let allocator = Allocator::default();
-  let formatted =
-    oxc_formatter_graphql::format(&allocator, input_text, build_graphql_options(config)).map_err(|e| e.to_string())?;
+  let formatted = oxc_formatter_graphql::format(&allocator, input_text, build_graphql_options(config))
+    .map_err(|e| to_format_error(e, input_text))?;
   Ok(formatted.print().map_err(|e| e.to_string())?.into_code())
 }
 
@@ -113,22 +114,56 @@ fn format_css(input_text: &str, variant: CssVariant, config: &Configuration) -> 
   // the services are what format the front matter
   let session = FormatSession::with_services(&allocator, InputKind::PhysicalFile, build_session_services(config));
   let formatted = oxc_formatter_css::format_with_session(&session, input_text, build_css_options(config, variant))
-    .map_err(|e| e.to_string())?;
+    .map_err(|e| to_format_error(e, input_text))?;
   Ok(formatted.print().map_err(|e| e.to_string())?.into_code())
 }
 
 fn format_yaml(input_text: &str, config: &Configuration) -> Result<String, FormatError> {
   let allocator = Allocator::default();
-  let formatted =
-    oxc_formatter_yaml::format(&allocator, input_text, build_yaml_options(config)).map_err(|e| e.to_string())?;
+  let formatted = oxc_formatter_yaml::format(&allocator, input_text, build_yaml_options(config))
+    .map_err(|e| to_format_error(e, input_text))?;
   Ok(formatted.print().map_err(|e| e.to_string())?.into_code())
 }
 
 fn format_markdown(input_text: &str, config: &Configuration) -> Result<String, FormatError> {
   let allocator = Allocator::default();
   let formatted = oxc_formatter_markdown::format(&allocator, input_text, build_markdown_options(config))
-    .map_err(|e| e.to_string())?;
+    .map_err(|e| to_format_error(e, input_text))?;
   Ok(formatted.print().map_err(|e| e.to_string())?.into_code())
+}
+
+fn format_toml(input_text: &str, config: &Configuration) -> Result<String, FormatError> {
+  // the formatter doesn't fail on a syntax error and instead leaves that part of the
+  // file as-is, which is not stable, so fail the same way the other languages do
+  if let Some(error) = oxc_toml::parse(input_text).errors.first() {
+    let (line, column) = line_and_column(input_text, error.range.start as usize);
+    return Err(format!("{} (line {}, column {})", error.message, line, column).into());
+  }
+  Ok(oxc_toml::format(input_text, build_toml_options(config)))
+}
+
+fn to_format_error(diagnostic: OxcDiagnostic, text: &str) -> FormatError {
+  match diagnostic.labels.first() {
+    Some(label) => {
+      let (line, column) = line_and_column(text, label.offset() as usize);
+      format!("{} (line {}, column {})", diagnostic, line, column).into()
+    }
+    None => diagnostic.to_string().into(),
+  }
+}
+
+/// Gets the 1-indexed line and column of the byte offset in the text.
+fn line_and_column(text: &str, offset: usize) -> (usize, usize) {
+  let mut offset = offset.min(text.len());
+  while !text.is_char_boundary(offset) {
+    offset -= 1;
+  }
+  let before = &text[..offset];
+  let line_start = before.rfind('\n').map(|index| index + 1).unwrap_or(0);
+  (
+    before.matches('\n').count() + 1,
+    before[line_start..].chars().count() + 1,
+  )
 }
 
 #[cfg(test)]

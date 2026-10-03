@@ -212,20 +212,12 @@
       "default": true
     },
     "sortPackageJson": {
-      "description": "Whether to sort the properties of package.json files. May be a boolean or an object of options.",
-      "default": true,
-      "oneOf": [{
-        "type": "boolean"
-      }, {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "sortScripts": {
-            "description": "Whether to sort the scripts alphabetically.",
-            "type": "boolean",
-            "default": false
-          }
-        }
+      "$ref": "#/definitions/sortPackageJson"
+    },
+    "experimentalSortPackageJson": {
+      "description": "Alias of \"sortPackageJson\".",
+      "allOf": [{
+        "$ref": "#/definitions/sortPackageJson"
       }]
     },
     "sortImports": {
@@ -233,14 +225,18 @@
     },
     "experimentalSortImports": {
       "description": "Alias of \"sortImports\".",
-      "$ref": "#/definitions/sortImports"
+      "allOf": [{
+        "$ref": "#/definitions/sortImports"
+      }]
     },
     "sortTailwindcss": {
       "$ref": "#/definitions/sortTailwindcss"
     },
     "experimentalTailwindcss": {
       "description": "Alias of \"sortTailwindcss\".",
-      "$ref": "#/definitions/sortTailwindcss"
+      "allOf": [{
+        "$ref": "#/definitions/sortTailwindcss"
+      }]
     },
     "jsdoc": {
       "description": "Enable JSDoc comment formatting. May be a boolean or an object of options.",
@@ -322,7 +318,8 @@
             "type": "boolean",
             "default": false
           }
-        }
+        },
+        "additionalProperties": false
       }]
     }
   },
@@ -368,7 +365,7 @@
             "default": true
           },
           "newlinesBetween": {
-            "description": "Whether to insert blank lines between different import groups.",
+            "description": "Whether to insert blank lines between different import groups. Defaults to false when \"partitionByNewline\" is true because the two cannot be used together.",
             "type": "boolean",
             "default": true
           },
@@ -507,11 +504,12 @@
               }
             }
           }
-        }
+        },
+        "additionalProperties": false
       }]
     },
     "sortTailwindcss": {
-      "description": "Collect Tailwind CSS classes for sorting. May be a boolean or an object of options. Note that the classes are not reordered because oxc only implements the sorter in JS.",
+      "description": "Options for sorting Tailwind CSS classes. May be a boolean or an object of options. Note that this currently has no effect because Oxc only implements the sorter in JS, which a Wasm plugin cannot run.",
       "oneOf": [{
         "type": "boolean",
         "description": "Enables it with the default options when true."
@@ -536,6 +534,24 @@
           },
           "preserveWhitespace": {
             "description": "Preserve whitespace in class strings.",
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "additionalProperties": false
+      }]
+    },
+    "sortPackageJson": {
+      "description": "Whether to sort the properties of package.json files. May be a boolean or an object of options.",
+      "default": true,
+      "oneOf": [{
+        "type": "boolean"
+      }, {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "sortScripts": {
+            "description": "Whether to sort the scripts alphabetically.",
             "type": "boolean",
             "default": false
           }

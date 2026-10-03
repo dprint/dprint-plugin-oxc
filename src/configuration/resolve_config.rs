@@ -94,15 +94,6 @@ pub fn resolve_config(
     jsdoc: resolve_jsdoc_options(&mut config, &mut diagnostics),
   };
 
-  if let Some(sort_imports) = &resolved_config.experimental_sort_imports
-    && let Err(message) = crate::options::build_sort_imports_options(sort_imports).validate()
-  {
-    diagnostics.push(ConfigurationDiagnostic {
-      property_name: "sortImports".to_string(),
-      message,
-    });
-  }
-
   diagnostics.extend(get_unknown_property_diagnostics(config));
 
   ResolveConfigurationResult {
@@ -115,8 +106,9 @@ fn resolve_sort_package_json_options(
   config: &mut ConfigKeyMap,
   diagnostics: &mut Vec<ConfigurationDiagnostic>,
 ) -> Option<SortPackageJsonOptions> {
-  let property_name = "sortPackageJson";
-  match config.shift_remove(property_name)? {
+  let (property_name, value) =
+    take_aliased_value(config, &["sortPackageJson", "experimentalSortPackageJson"], diagnostics)?;
+  match value {
     ConfigKeyValue::Bool(enabled) => Some(SortPackageJsonOptions {
       enabled,
       sort_scripts: false,
@@ -134,10 +126,9 @@ fn resolve_sort_package_json_options(
         sort_scripts,
       })
     }
-    ConfigKeyValue::Null => None,
     _ => {
       diagnostics.push(ConfigurationDiagnostic {
-        property_name: property_name.to_string(),
+        property_name,
         message: "expected a boolean or an object".to_string(),
       });
       None
@@ -160,7 +151,10 @@ fn resolve_sort_imports_options(
     get_nullable_value::<bool>(&mut obj, "sortSideEffects", &mut inner_diagnostics).unwrap_or(false);
   let order = get_nullable_value::<SortOrder>(&mut obj, "order", &mut inner_diagnostics);
   let ignore_case = get_nullable_value::<bool>(&mut obj, "ignoreCase", &mut inner_diagnostics);
-  let newlines_between = get_nullable_value::<bool>(&mut obj, "newlinesBetween", &mut inner_diagnostics);
+  // oxc rejects partitioning by newline along with newlines between the groups, so
+  // only default to having newlines between the groups when not partitioning by newline
+  let newlines_between = get_nullable_value::<bool>(&mut obj, "newlinesBetween", &mut inner_diagnostics)
+    .or(partition_by_newline.then_some(false));
 
   let newline_boundary_overrides: Vec<Option<bool>> = obj
     .shift_remove("newlineBoundaryOverrides")
@@ -208,6 +202,12 @@ fn resolve_sort_imports_options(
     ),
   };
   let newline_boundary_overrides = if marker_overrides.iter().any(Option::is_some) {
+    if !newline_boundary_overrides.is_empty() {
+      inner_diagnostics.push(ConfigurationDiagnostic {
+        property_name: format!("{property_name}.newlineBoundaryOverrides"),
+        message: "cannot be used along with `{ \"newlinesBetween\" }` markers in `groups`".to_string(),
+      });
+    }
     marker_overrides
   } else {
     newline_boundary_overrides
@@ -264,7 +264,7 @@ fn resolve_sort_imports_options(
 
   diagnostics.extend(inner_diagnostics);
 
-  Some(SortImportsOptions {
+  let options = SortImportsOptions {
     partition_by_newline,
     partition_by_comment,
     sort_side_effects,
@@ -275,7 +275,14 @@ fn resolve_sort_imports_options(
     internal_pattern,
     groups,
     custom_groups,
-  })
+  };
+
+  // report the combinations of options that oxc rejects
+  if let Err(message) = crate::options::build_sort_imports_options(&options).validate() {
+    diagnostics.push(ConfigurationDiagnostic { property_name, message });
+  }
+
+  Some(options)
 }
 
 fn resolve_tailwindcss_options(
@@ -416,13 +423,11 @@ fn take_toggle_object(
   property_names: &[&str],
   diagnostics: &mut Vec<ConfigurationDiagnostic>,
 ) -> Option<(String, ConfigKeyMap)> {
-  let (property_name, value) = property_names
-    .iter()
-    .find_map(|name| config.shift_remove(*name).map(|value| (name.to_string(), value)))?;
+  let (property_name, value) = take_aliased_value(config, property_names, diagnostics)?;
   match value {
     ConfigKeyValue::Object(obj) => Some((property_name, obj)),
     ConfigKeyValue::Bool(true) => Some((property_name, ConfigKeyMap::new())),
-    ConfigKeyValue::Bool(false) | ConfigKeyValue::Null => None,
+    ConfigKeyValue::Bool(false) => None,
     _ => {
       diagnostics.push(ConfigurationDiagnostic {
         property_name,
@@ -431,4 +436,27 @@ fn take_toggle_object(
       None
     }
   }
+}
+
+/// Takes the value of an option that has multiple names, returning the name that was
+/// used along with its value. A null value is the same as the option not being set.
+fn take_aliased_value(
+  config: &mut ConfigKeyMap,
+  property_names: &[&str],
+  diagnostics: &mut Vec<ConfigurationDiagnostic>,
+) -> Option<(String, ConfigKeyValue)> {
+  let mut result: Option<(String, ConfigKeyValue)> = None;
+  for property_name in property_names {
+    match config.shift_remove(*property_name) {
+      Some(ConfigKeyValue::Null) | None => {}
+      Some(value) => match &result {
+        Some((used_name, _)) => diagnostics.push(ConfigurationDiagnostic {
+          property_name: property_name.to_string(),
+          message: format!("cannot be specified along with `{used_name}`, which it is an alias of"),
+        }),
+        None => result = Some((property_name.to_string(), value)),
+      },
+    }
+  }
+  result
 }

@@ -1,0 +1,12 @@
+-- file.ts --
+== should format graphql in a template with a comment tag ==
+const query = /* GraphQL */ `query{user(id:1){name}}`;
+
+[expect]
+const query = /* GraphQL */ `
+  query {
+    user(id: 1) {
+      name
+    }
+  }
+`;

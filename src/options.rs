@@ -15,7 +15,6 @@ use oxc_formatter::QuoteStyle;
 use oxc_formatter::Semicolons;
 use oxc_formatter::SortImportsOptions;
 use oxc_formatter::SortOrder;
-use oxc_formatter::SortTailwindcssOptions;
 use oxc_formatter::TrailingCommas;
 use oxc_formatter_core::CoreFormatOptions;
 use oxc_formatter_core::FormatOptions;
@@ -162,13 +161,10 @@ pub fn build_js_options(config: &Configuration) -> JsFormatOptions {
     .as_ref()
     .map(build_sort_imports_options);
 
-  if let Some(ref tailwindcss) = config.experimental_tailwindcss {
-    options.sort_tailwindcss = Some(SortTailwindcssOptions {
-      functions: tailwindcss.functions.clone(),
-      attributes: tailwindcss.attributes.clone(),
-      preserve_whitespace: tailwindcss.preserve_whitespace,
-    });
-  }
+  // `sort_tailwindcss` is left off because the classes it collects are ordered by a
+  // sorter the host provides, which oxc only has an implementation of in JS. Collecting
+  // without sorting would only normalize the whitespace of the classes, so like oxfmt's
+  // pure Rust build nothing is collected until a sorter exists.
 
   if let Some(ref jsdoc) = config.jsdoc {
     options.jsdoc = Some(JsdocOptions {
@@ -304,8 +300,7 @@ pub fn build_json_options(config: &Configuration, variant: JsonVariant) -> JsonF
 }
 
 pub fn build_css_options(config: &Configuration, variant: CssVariant) -> CssFormatOptions {
-  // `sort_tailwindcss` is left off because sorting the classes of an `@apply`
-  // requires a sorter, which oxc only has an implementation of in JS
+  // `sort_tailwindcss` is left off for the same reason as in `build_js_options`
   let mut options = CssFormatOptions {
     variant,
     ..Default::default()

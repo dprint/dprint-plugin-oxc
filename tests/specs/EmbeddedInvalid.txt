@@ -1,0 +1,12 @@
+-- file.ts --
+== should leave embedded code that fails to parse or has no formatter as-is ==
+const style = css`a{{{`;
+const query = gql`query{{{`;
+const page = html`<div><span>text</span></div>`;
+const   after=1;
+
+[expect]
+const style = css`a{{{`;
+const query = gql`query{{{`;
+const page = html`<div><span>text</span></div>`;
+const after = 1;

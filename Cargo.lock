@@ -175,6 +175,7 @@ dependencies = [
  "dprint-development",
  "oxc-toml",
  "oxc_allocator",
+ "oxc_diagnostics",
  "oxc_formatter",
  "oxc_formatter_core",
  "oxc_formatter_css",

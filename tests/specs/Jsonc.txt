@@ -2,13 +2,15 @@
 == should format ==
 {
   // comment
-  "compilerOptions":{"strict":true, /* inline */ "target":"esnext",},
+  "compilerOptions":{"strict":true,"target":"esnext",},
+  /* block comment */
   "include":["src"
   ]}
 
 [expect]
 {
   // comment
-  "compilerOptions": { "strict": true /* inline */, "target": "esnext" },
+  "compilerOptions": { "strict": true, "target": "esnext" },
+  /* block comment */
   "include": ["src"],
 }

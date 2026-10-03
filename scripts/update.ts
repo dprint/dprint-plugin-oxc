@@ -27,6 +27,9 @@ const isPatchBump = cargoTomlVersion.version.major === latestTag.version.major
   && cargoTomlVersion.version.minor === latestTag.version.minor;
 cargoToml.replaceAll(cargoTomlVersion.tag, latestTag.tag);
 
+$.logStep("Updating crates.io dependencies shared with oxc...");
+await updateCratesIoDependencies(latestTag.tag);
+
 // Verify the update. A clean patch bump publishes exactly as before. A minor
 // bump always gets an AI review (Oxc may have added options without breaking
 // the build), and a patch bump that fails the checks gets an AI fix attempt.
@@ -184,6 +187,43 @@ async function updateRustToolchain(tag: string) {
   } else {
     $.log(`Rust toolchain already at ${oxcChannel}.`);
   }
+}
+
+// the dependencies that are not in the oxc repo, but that oxfmt formats with. These
+// are not covered by the tag, so use the same versions as oxc's workspace Cargo.toml.
+const CRATES_IO_DEPENDENCIES = ["oxc-toml", "sort-package-json"];
+
+async function updateCratesIoDependencies(tag: string) {
+  const client = new Octokit();
+  const response = await client.rest.repos.getContent({
+    owner: "oxc-project",
+    repo: "oxc",
+    path: "Cargo.toml",
+    ref: tag,
+  });
+  if (!("content" in response.data)) {
+    throw new Error("Could not fetch Cargo.toml from oxc repo.");
+  }
+  const oxcCargoToml = atob(response.data.content);
+  const cargoTomlPath = rootDirPath.join("Cargo.toml");
+  let text = cargoTomlPath.readTextSync();
+  for (const name of CRATES_IO_DEPENDENCIES) {
+    const pattern = new RegExp(`^${name} = "([^"]+)"`, "m");
+    const oxcVersion = oxcCargoToml.match(pattern)?.[1];
+    const localMatch = text.match(pattern);
+    if (oxcVersion == null || localMatch == null) {
+      // oxc may have stopped using the crate, which the AI review handles
+      $.logWarn(`Could not find a version of ${name} to compare.`);
+      continue;
+    }
+    if (localMatch[1] !== oxcVersion) {
+      $.log(`Updating ${name}: ${localMatch[1]} -> ${oxcVersion}`);
+      text = text.replace(localMatch[0], `${name} = "${oxcVersion}"`);
+    } else {
+      $.log(`${name} already at ${oxcVersion}.`);
+    }
+  }
+  cargoTomlPath.writeTextSync(text);
 }
 
 async function getGitTags(): Promise<string[]> {
