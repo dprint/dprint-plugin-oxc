@@ -157,7 +157,7 @@ function buildRefixPrompt(review: ReviewResult): string {
 // the languages the plugin formats. Keep this in sync with `FileKind` in
 // `src/file_kind.rs` (the fixer is told to update it when adding a language).
 function describeLanguages(): string {
-  return "JavaScript/TypeScript (`oxc_formatter`), JSON/JSONC/JSON5 (`oxc_formatter_json`), CSS/SCSS/Less (`oxc_formatter_css`), GraphQL (`oxc_formatter_graphql`), YAML (`oxc_formatter_yaml`), Markdown (`oxc_formatter_markdown`), and TOML (`oxc-toml`)";
+  return "JavaScript/TypeScript (`oxc_formatter`), JSON/JSONC/JSON5 (`oxc_formatter_json`), CSS/SCSS/Less (`oxc_formatter_css`), GraphQL (`oxc_formatter_graphql`), YAML (`oxc_formatter_yaml`), and TOML (`oxc-toml`). It also formats Markdown (`oxc_formatter_markdown`) when the `experimentalMarkdown` config option is enabled, which is the one exception to mirroring oxfmt: oxfmt still formats Markdown with Prettier and has no `to_oxc_formatter_markdown`, so the plugin makes it opt-in and maps the options that Prettier uses for Markdown (`proseWrap` and `singleQuote`). Do not remove Markdown support or flag it as a mismatch. If oxfmt starts formatting Markdown with `oxc_formatter_markdown`, mirror how it does it (options, file extensions, embedded code) and make it formatted by default";
 }
 
 function describeWiring(): string {

@@ -78,8 +78,25 @@ fn should_not_format_unknown_or_excluded_files() {
 }
 
 #[test]
+fn should_only_format_markdown_when_enabled() {
+  let path = PathBuf::from("file.md");
+  let text = "#   Title\n";
+  for config in [
+    Configuration::default(),
+    resolve(serde_json::json!({ "experimentalMarkdown": false })).config,
+  ] {
+    assert_eq!(format_text(&path, text, &config).unwrap(), None);
+    // not even a whitespace only file is changed
+    assert_eq!(format_text(&path, "  \n", &config).unwrap(), None);
+  }
+
+  let config = resolve(serde_json::json!({ "experimentalMarkdown": true })).config;
+  assert_eq!(format_text(&path, text, &config).unwrap().as_deref(), Some("# Title\n"));
+}
+
+#[test]
 fn should_format_whitespace_only_file_as_empty() {
-  let config = Configuration::default();
+  let config = resolve(serde_json::json!({ "experimentalMarkdown": true })).config;
   for file_name in [
     "file.ts",
     "file.json",
@@ -101,7 +118,7 @@ fn should_format_whitespace_only_file_as_empty() {
 
 #[test]
 fn should_use_line_ending() {
-  let config = resolve(serde_json::json!({ "lineEnding": "crlf" })).config;
+  let config = resolve(serde_json::json!({ "lineEnding": "crlf", "experimentalMarkdown": true })).config;
   for (file_name, text, expected) in [
     ("file.ts", "a;\nb;\n", "a;\r\nb;\r\n"),
     ("file.json", "[\n1,\n2]", "[1, 2]\r\n"),

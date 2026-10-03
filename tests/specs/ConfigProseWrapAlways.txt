@@ -1,5 +1,5 @@
 -- file.md --
-~~ proseWrap: always, lineWidth: 40 ~~
+~~ experimentalMarkdown: true, proseWrap: always, lineWidth: 40 ~~
 !! should wrap prose !!
 This is a long line of prose that goes on for quite a while and should be wrapped at the line width.
 

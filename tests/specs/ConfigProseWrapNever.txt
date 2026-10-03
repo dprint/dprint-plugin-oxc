@@ -1,5 +1,5 @@
 -- file.md --
-~~ proseWrap: never, lineWidth: 40 ~~
+~~ experimentalMarkdown: true, proseWrap: never, lineWidth: 40 ~~
 !! should unwrap prose !!
 This is a line of prose
 that is broken up

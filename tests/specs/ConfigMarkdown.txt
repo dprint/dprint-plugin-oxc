@@ -1,5 +1,5 @@
 -- file.md --
-~~ quoteStyle: single ~~
+~~ experimentalMarkdown: true, quoteStyle: single ~~
 !! should format with config !!
 [link](http://example.com "title")
 

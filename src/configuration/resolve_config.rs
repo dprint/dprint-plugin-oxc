@@ -84,6 +84,7 @@ pub fn resolve_config(
       "htmlWhitespaceSensitivityIgnore",
       &mut diagnostics,
     ),
+    experimental_markdown: get_nullable_value(&mut config, "experimentalMarkdown", &mut diagnostics),
     prose_wrap: get_nullable_value(&mut config, "proseWrap", &mut diagnostics),
     embedded_language_formatting: get_nullable_value(&mut config, "embeddedLanguageFormatting", &mut diagnostics),
     insert_final_newline: get_nullable_value(&mut config, "insertFinalNewline", &mut diagnostics),

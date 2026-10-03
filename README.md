@@ -13,10 +13,11 @@ The plugin formats the languages that Oxc's formatter (oxfmt) formats natively i
 - CSS, SCSS, and Less
 - GraphQL
 - YAML
-- Markdown
 - TOML
 
 Code embedded in these is formatted too (ex. CSS or GraphQL in a JS template literal, or YAML front matter in CSS).
+
+Markdown is also supported, but is opt-in via `"experimentalMarkdown": true` because oxfmt does not use Oxc's Markdown formatter yet. Code blocks and front matter in Markdown files are not formatted.
 
 If you only want to use this plugin for some of these languages, list the plugins you want to format the other languages before this one in your dprint.json, since dprint formats a file with the first plugin that matches it.
 

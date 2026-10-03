@@ -1,4 +1,5 @@
 -- file.md --
+~~ experimentalMarkdown: true ~~
 !! should format !!
 #   Title
 

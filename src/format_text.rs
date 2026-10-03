@@ -26,6 +26,10 @@ pub fn format_text(file_path: &Path, input_text: &str, config: &Configuration) -
     return Ok(None);
   };
 
+  if file_kind == FileKind::Markdown && config.experimental_markdown != Some(true) {
+    return Ok(None);
+  }
+
   // a final newline is not inserted into an empty file
   if input_text.trim().is_empty() {
     return Ok(if input_text.is_empty() {

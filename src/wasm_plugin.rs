@@ -25,13 +25,13 @@ impl SyncPluginHandler<Configuration> for OxcPluginHandler {
   ) -> PluginResolveConfigurationResult<Configuration> {
     let result = resolve_config(config, global_config);
     PluginResolveConfigurationResult {
-      config: result.config,
-      diagnostics: result.diagnostics,
       file_matching: FileMatchingInfo {
-        file_extensions: crate::file_extensions(),
-        file_names: crate::file_names(),
+        file_extensions: crate::file_extensions(&result.config),
+        file_names: crate::file_names(&result.config),
         additive: false,
       },
+      config: result.config,
+      diagnostics: result.diagnostics,
     }
   }
 
