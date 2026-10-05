@@ -6,6 +6,10 @@ import { $, CargoToml, semver } from "automation";
 import { Octokit } from "octokit";
 import { aiFixOxcUpdate } from "./ai_fix.ts";
 
+// the dependencies that are not in the oxc repo, but that oxfmt formats with. These
+// are not covered by the tag, so use the same versions as oxc's workspace Cargo.toml.
+const CRATES_IO_DEPENDENCIES = ["oxc-toml", "sort-package-json"];
+
 const rootDirPath = $.path(import.meta.dirname!).parentOrThrow();
 const cargoToml = new CargoToml(rootDirPath.join("Cargo.toml"));
 const cargoTomlVersion = getCargoTomlTag(cargoToml.text());
@@ -188,10 +192,6 @@ async function updateRustToolchain(tag: string) {
     $.log(`Rust toolchain already at ${oxcChannel}.`);
   }
 }
-
-// the dependencies that are not in the oxc repo, but that oxfmt formats with. These
-// are not covered by the tag, so use the same versions as oxc's workspace Cargo.toml.
-const CRATES_IO_DEPENDENCIES = ["oxc-toml", "sort-package-json"];
 
 async function updateCratesIoDependencies(tag: string) {
   const client = new Octokit();
