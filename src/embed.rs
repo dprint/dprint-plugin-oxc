@@ -2,6 +2,8 @@ use std::sync::Arc;
 
 use oxc_allocator::Allocator;
 use oxc_formatter::CssInJsTemplate;
+use oxc_formatter::JsEmbeddedIn;
+use oxc_formatter::MarkdownInJsTemplate;
 use oxc_formatter_core::DispatchRequest;
 use oxc_formatter_core::DispatchResponse;
 use oxc_formatter_core::EmbeddedIr;
@@ -18,14 +20,19 @@ use oxc_formatter_css::CssVariant;
 use oxc_formatter_graphql::GraphqlFormatOptions;
 use oxc_formatter_json::JsonFormatOptions;
 use oxc_formatter_json::JsonVariant;
+use oxc_formatter_markdown::MarkdownFormatOptions;
+use oxc_formatter_markdown::XxxInMarkdownCodeBlock;
 use oxc_formatter_yaml::YamlFormatOptions;
+use oxc_span::SourceType;
 
 use crate::configuration::Configuration;
 use crate::configuration::EmbeddedLanguageFormatting;
 use crate::options::build_core_options;
 use crate::options::build_css_options;
 use crate::options::build_graphql_options;
+use crate::options::build_js_options;
 use crate::options::build_json_options;
+use crate::options::build_markdown_options;
 use crate::options::build_yaml_options;
 
 /// Builds the services of a root formatter run, which are what format the code that's
@@ -60,8 +67,28 @@ fn build_dispatcher(config: &Configuration) -> FormatDispatcher {
   Arc::new(move |session: &FormatSession<'_>, request: DispatchRequest<'_>| {
     let text = request.text;
     Ok(match request.language {
+      "javascript" => to_response(oxc_formatter::format_to_ir(
+        session,
+        text,
+        SourceType::from_extension("js").expect("js is a supported source type"),
+        options.js.clone(),
+        request
+          .parent_context
+          .and_then(|context| context.downcast_ref::<XxxInMarkdownCodeBlock>())
+          .map(|_| JsEmbeddedIn::MarkdownCodeBlock),
+      )),
+      "typescript" | "angular-ts" => to_response(oxc_formatter::format_to_ir(
+        session,
+        text,
+        SourceType::from_extension("ts").expect("ts is a supported source type"),
+        options.js.clone(),
+        request
+          .parent_context
+          .and_then(|context| context.downcast_ref::<XxxInMarkdownCodeBlock>())
+          .map(|_| JsEmbeddedIn::MarkdownCodeBlock),
+      )),
       "graphql" | "gql" => to_response(oxc_formatter_graphql::format_to_ir(session, text, options.graphql)),
-      "css" | "scss" | "less" => {
+      "css" | "postcss" | "scss" | "less" => {
         // css-in-js is always parsed as SCSS with `${}` placeholder markers
         let is_css_in_js = request
           .parent_context
@@ -95,27 +122,58 @@ fn build_dispatcher(config: &Configuration) -> FormatDispatcher {
           },
         ))
       }
-      // oxfmt formats these with Prettier (ex. html and markdown) or not at all
-      _ => DispatchResponse::PreserveOriginal,
+      "markdown" | "md" => {
+        let in_js_template = request
+          .parent_context
+          .is_some_and(|context| context.downcast_ref::<MarkdownInJsTemplate>().is_some())
+          || request
+            .parent_context
+            .and_then(|context| context.downcast_ref::<XxxInMarkdownCodeBlock>())
+            .is_some_and(|context| context.in_js_template);
+        to_response(oxc_formatter_markdown::format_to_ir(
+          session,
+          text,
+          options.markdown,
+          in_js_template,
+        ))
+      }
+      language => match SourceType::from_extension(language) {
+        Ok(source_type) => to_response(oxc_formatter::format_to_ir(
+          session,
+          text,
+          source_type,
+          options.js.clone(),
+          request
+            .parent_context
+            .and_then(|context| context.downcast_ref::<XxxInMarkdownCodeBlock>())
+            .map(|_| JsEmbeddedIn::MarkdownCodeBlock),
+        )),
+        Err(_) => DispatchResponse::PreserveOriginal,
+      },
+      // oxfmt formats these with Prettier (ex. html) or not at all
     })
   })
 }
 
 /// The options of the embedded languages, which are those of the file they're embedded in.
 struct EmbeddedOptions {
+  js: oxc_formatter::JsFormatOptions,
   graphql: GraphqlFormatOptions,
   css: CssFormatOptions,
   yaml: YamlFormatOptions,
   json: JsonFormatOptions,
+  markdown: MarkdownFormatOptions,
 }
 
 impl EmbeddedOptions {
   fn new(config: &Configuration) -> Self {
     Self {
+      js: build_js_options(config),
       graphql: build_graphql_options(config),
       css: build_css_options(config, CssVariant::Css),
       yaml: build_yaml_options(config),
       json: build_json_options(config, JsonVariant::Json),
+      markdown: build_markdown_options(config),
     }
   }
 }

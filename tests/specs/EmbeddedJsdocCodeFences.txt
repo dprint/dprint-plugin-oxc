@@ -55,7 +55,7 @@ function test() {}
  * ```
  *
  * ```yml
- * key: value
+ * key:   value
  * ```
  *
  * ```scss
@@ -74,21 +74,16 @@ function test() {}
  * ```
  *
  * ```jsonc
- * {
- *   "a": 1, // comment
+ * {"a":1, // comment
  * }
  * ```
  *
  * ```json5
- * { a: "b" }
+ * {a:'b'}
  * ```
  *
  * ```graphql
- * {
- *   a {
- *     b
- *   }
- * }
+ * {a{b}}
  * ```
  *
  * ```toml

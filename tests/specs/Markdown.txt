@@ -1,5 +1,4 @@
 -- file.md --
-~~ experimentalMarkdown: true ~~
 !! should format !!
 #   Title
 
@@ -35,5 +34,5 @@ const x   =   1;
 Some _emphasis_ and **strong** text.
 
 ```js
-const x   =   1;
+const x = 1;
 ```

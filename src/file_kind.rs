@@ -98,7 +98,7 @@ impl FileKind {
 }
 
 /// The file extensions the plugin formats with the provided configuration.
-pub fn file_extensions(config: &Configuration) -> Vec<String> {
+pub fn file_extensions(_config: &Configuration) -> Vec<String> {
   [
     JS_EXTENSIONS,
     ADDITIONAL_JS_EXTENSIONS,
@@ -108,7 +108,7 @@ pub fn file_extensions(config: &Configuration) -> Vec<String> {
     GRAPHQL_EXTENSIONS,
     CSS_EXTENSIONS,
     YAML_EXTENSIONS,
-    markdown_only(config, MARKDOWN_EXTENSIONS),
+    MARKDOWN_EXTENSIONS,
   ]
   .into_iter()
   .flatten()
@@ -118,27 +118,19 @@ pub fn file_extensions(config: &Configuration) -> Vec<String> {
 
 /// The names of the files the plugin formats regardless of their extension
 /// with the provided configuration.
-pub fn file_names(config: &Configuration) -> Vec<String> {
+pub fn file_names(_config: &Configuration) -> Vec<String> {
   [
     JS_FILE_NAMES,
     TOML_FILE_NAMES,
     JSON_FILE_NAMES,
     YAML_RC_FILE_NAMES,
     YAML_FILE_NAMES,
-    markdown_only(config, MARKDOWN_FILE_NAMES),
+    MARKDOWN_FILE_NAMES,
   ]
   .into_iter()
   .flatten()
   .map(|name| name.to_string())
   .collect()
-}
-
-fn markdown_only(config: &Configuration, items: &'static [&'static str]) -> &'static [&'static str] {
-  if config.experimental_markdown == Some(true) {
-    items
-  } else {
-    &[]
-  }
 }
 
 fn is_extra_js_file(file_name: &str, extension: Option<&str>) -> bool {
@@ -308,8 +300,6 @@ const YAML_EXTENSIONS: &[&str] = &[
   "yaml-tmlanguage",
 ];
 
-// oxfmt does not format Markdown with `oxc_formatter_markdown` yet (it uses Prettier),
-// so these are what Prettier considers to be Markdown.
 const MARKDOWN_EXTENSIONS: &[&str] = &[
   "md", "livemd", "markdown", "mdown", "mdwn", "mkd", "mkdn", "mkdown", "ronn", "scd", "workbook",
 ];
@@ -372,10 +362,7 @@ mod test {
 
   #[test]
   fn matched_files_are_classified() {
-    let config = Configuration {
-      experimental_markdown: Some(true),
-      ..Default::default()
-    };
+    let config = Configuration::default();
     for ext in file_extensions(&config) {
       let path = format!("file.{ext}");
       assert!(FileKind::from_path(Path::new(&path)).is_some(), "{path}");
@@ -386,17 +373,10 @@ mod test {
   }
 
   #[test]
-  fn markdown_is_only_matched_when_enabled() {
+  fn markdown_is_matched() {
     let config = Configuration::default();
-    assert!(!file_extensions(&config).contains(&"md".to_string()));
-    assert!(!file_names(&config).contains(&"README".to_string()));
-    assert!(file_extensions(&config).contains(&"json".to_string()));
-
-    let config = Configuration {
-      experimental_markdown: Some(true),
-      ..Default::default()
-    };
     assert!(file_extensions(&config).contains(&"md".to_string()));
     assert!(file_names(&config).contains(&"README".to_string()));
+    assert!(file_extensions(&config).contains(&"json".to_string()));
   }
 }

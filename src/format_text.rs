@@ -27,10 +27,6 @@ pub fn format_text(file_path: &Path, input_text: &str, config: &Configuration) -
     return Ok(None);
   };
 
-  if file_kind == FileKind::Markdown && config.experimental_markdown != Some(true) {
-    return Ok(None);
-  }
-
   // a final newline is not inserted into an empty file
   if input_text.trim().is_empty() {
     return Ok(if input_text.is_empty() {
@@ -127,7 +123,8 @@ fn format_yaml(input_text: &str, config: &Configuration) -> Result<String, Forma
 
 fn format_markdown(input_text: &str, config: &Configuration) -> Result<String, FormatError> {
   let allocator = Allocator::default();
-  let formatted = oxc_formatter_markdown::format(&allocator, input_text, build_markdown_options(config))
+  let session = FormatSession::with_services(&allocator, InputKind::PhysicalFile, build_session_services(config));
+  let formatted = oxc_formatter_markdown::format_with_session(&session, input_text, build_markdown_options(config))
     .map_err(|e| to_format_error(e, input_text))?;
   Ok(formatted.print().map_err(|e| e.to_string())?.into_code())
 }

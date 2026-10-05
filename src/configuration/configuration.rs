@@ -309,9 +309,6 @@ pub struct Configuration {
   pub operator_position: Option<OperatorPosition>,
   pub experimental_ternaries: Option<bool>,
   pub html_whitespace_sensitivity_ignore: Option<bool>,
-  /// Whether to format Markdown files, which is opt-in because oxfmt does not
-  /// format Markdown with `oxc_formatter_markdown` yet.
-  pub experimental_markdown: Option<bool>,
   pub prose_wrap: Option<ProseWrap>,
   pub embedded_language_formatting: Option<EmbeddedLanguageFormatting>,
   pub insert_final_newline: Option<bool>,

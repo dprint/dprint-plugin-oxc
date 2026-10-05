@@ -174,11 +174,6 @@
       "type": "boolean",
       "default": false
     },
-    "experimentalMarkdown": {
-      "description": "[EXPERIMENTAL] Whether to format Markdown files. This is opt-in because Oxc's Markdown formatter is not yet used by oxfmt. Code blocks and front matter in Markdown files are not formatted.",
-      "type": "boolean",
-      "default": false
-    },
     "proseWrap": {
       "description": "How to wrap prose in YAML and Markdown.",
       "type": "string",
