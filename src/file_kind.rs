@@ -5,6 +5,7 @@ use oxc_formatter_json::JsonVariant;
 use oxc_span::SourceType;
 
 use crate::configuration::Configuration;
+use crate::configuration::Language;
 
 /// The kind of file to format, which decides the formatter that handles it.
 ///
@@ -95,42 +96,73 @@ impl FileKind {
     }
     None
   }
+
+  /// Gets the language whose `<language>.enabled` configuration decides
+  /// if the file is formatted.
+  pub fn language(&self) -> Language {
+    match self {
+      FileKind::Js(source_type) if source_type.is_typescript() => Language::TypeScript,
+      FileKind::Js(_) => Language::JavaScript,
+      FileKind::Json(JsonVariant::Jsonc) => Language::Jsonc,
+      FileKind::Json(JsonVariant::Json5) => Language::Json5,
+      FileKind::Json(_) | FileKind::PackageJson => Language::Json,
+      FileKind::Graphql => Language::Graphql,
+      FileKind::Css(CssVariant::Scss) => Language::Scss,
+      FileKind::Css(CssVariant::Less) => Language::Less,
+      FileKind::Css(_) => Language::Css,
+      FileKind::Yaml | FileKind::YamlRc => Language::Yaml,
+      FileKind::Markdown => Language::Markdown,
+      FileKind::Toml => Language::Toml,
+    }
+  }
 }
 
 /// The file extensions the plugin formats with the provided configuration.
-pub fn file_extensions(_config: &Configuration) -> Vec<String> {
-  [
-    JS_EXTENSIONS,
-    ADDITIONAL_JS_EXTENSIONS,
-    &["toml", "importmap", "json5", "scss", "less"],
-    JSON_EXTENSIONS,
-    JSONC_EXTENSIONS,
-    GRAPHQL_EXTENSIONS,
-    CSS_EXTENSIONS,
-    YAML_EXTENSIONS,
-    MARKDOWN_EXTENSIONS,
-  ]
-  .into_iter()
-  .flatten()
-  .map(|ext| ext.to_string())
-  .collect()
+pub fn file_extensions(config: &Configuration) -> Vec<String> {
+  enabled_items(
+    config,
+    &[
+      (Language::TypeScript, TS_EXTENSIONS),
+      (Language::JavaScript, JS_EXTENSIONS),
+      (Language::JavaScript, ADDITIONAL_JS_EXTENSIONS),
+      (Language::Toml, &["toml"]),
+      (Language::Json, &["importmap"]),
+      (Language::Json, JSON_EXTENSIONS),
+      (Language::Jsonc, JSONC_EXTENSIONS),
+      (Language::Json5, &["json5"]),
+      (Language::Graphql, GRAPHQL_EXTENSIONS),
+      (Language::Css, CSS_EXTENSIONS),
+      (Language::Scss, &["scss"]),
+      (Language::Less, &["less"]),
+      (Language::Yaml, YAML_EXTENSIONS),
+      (Language::Markdown, MARKDOWN_EXTENSIONS),
+    ],
+  )
 }
 
 /// The names of the files the plugin formats regardless of their extension
 /// with the provided configuration.
-pub fn file_names(_config: &Configuration) -> Vec<String> {
-  [
-    JS_FILE_NAMES,
-    TOML_FILE_NAMES,
-    JSON_FILE_NAMES,
-    YAML_RC_FILE_NAMES,
-    YAML_FILE_NAMES,
-    MARKDOWN_FILE_NAMES,
-  ]
-  .into_iter()
-  .flatten()
-  .map(|name| name.to_string())
-  .collect()
+pub fn file_names(config: &Configuration) -> Vec<String> {
+  enabled_items(
+    config,
+    &[
+      (Language::JavaScript, JS_FILE_NAMES),
+      (Language::Toml, TOML_FILE_NAMES),
+      (Language::Json, JSON_FILE_NAMES),
+      (Language::Yaml, YAML_RC_FILE_NAMES),
+      (Language::Yaml, YAML_FILE_NAMES),
+      (Language::Markdown, MARKDOWN_FILE_NAMES),
+    ],
+  )
+}
+
+fn enabled_items(config: &Configuration, items: &[(Language, &[&str])]) -> Vec<String> {
+  items
+    .iter()
+    .filter(|(language, _)| config.is_language_enabled(*language))
+    .flat_map(|(_, items)| items.iter())
+    .map(|item| item.to_string())
+    .collect()
 }
 
 fn is_extra_js_file(file_name: &str, extension: Option<&str>) -> bool {
@@ -184,8 +216,9 @@ const EXCLUDE_FILE_NAMES: &[&str] = &[
   "uv.lock",
 ];
 
-/// The extensions understood by `SourceType::from_path`.
-const JS_EXTENSIONS: &[&str] = &["ts", "tsx", "cts", "mts", "js", "jsx", "cjs", "mjs"];
+// these two are the extensions understood by `SourceType::from_path`
+const TS_EXTENSIONS: &[&str] = &["ts", "tsx", "cts", "mts"];
+const JS_EXTENSIONS: &[&str] = &["js", "jsx", "cjs", "mjs"];
 
 const ADDITIONAL_JS_EXTENSIONS: &[&str] = &[
   "_js",
@@ -378,5 +411,61 @@ mod test {
     assert!(file_extensions(&config).contains(&"md".to_string()));
     assert!(file_names(&config).contains(&"README".to_string()));
     assert!(file_extensions(&config).contains(&"json".to_string()));
+  }
+
+  #[test]
+  fn disabled_languages_are_not_matched() {
+    let config = Configuration {
+      markdown_enabled: Some(false),
+      typescript_enabled: Some(false),
+      scss_enabled: Some(false),
+      ..Default::default()
+    };
+    let extensions = file_extensions(&config);
+    for ext in ["md", "markdown", "ts", "tsx", "scss"] {
+      assert!(!extensions.contains(&ext.to_string()), "{ext}");
+    }
+    for ext in ["js", "jsx", "css", "less", "json"] {
+      assert!(extensions.contains(&ext.to_string()), "{ext}");
+    }
+    let names = file_names(&config);
+    assert!(!names.contains(&"README".to_string()));
+    assert!(names.contains(&"Pipfile".to_string()));
+  }
+
+  #[test]
+  fn disabling_a_language_only_unmatches_its_files() {
+    let paths = |config: &Configuration| {
+      let extensions = file_extensions(config).into_iter().map(|ext| format!("file.{ext}"));
+      extensions.chain(file_names(config)).collect::<Vec<_>>()
+    };
+    let all_paths = paths(&Configuration::default());
+    type DisableFn = fn(&mut Configuration);
+    let disable_fns: [(Language, DisableFn); 12] = [
+      (Language::JavaScript, |config| config.javascript_enabled = Some(false)),
+      (Language::TypeScript, |config| config.typescript_enabled = Some(false)),
+      (Language::Json, |config| config.json_enabled = Some(false)),
+      (Language::Jsonc, |config| config.jsonc_enabled = Some(false)),
+      (Language::Json5, |config| config.json5_enabled = Some(false)),
+      (Language::Graphql, |config| config.graphql_enabled = Some(false)),
+      (Language::Css, |config| config.css_enabled = Some(false)),
+      (Language::Scss, |config| config.scss_enabled = Some(false)),
+      (Language::Less, |config| config.less_enabled = Some(false)),
+      (Language::Yaml, |config| config.yaml_enabled = Some(false)),
+      (Language::Markdown, |config| config.markdown_enabled = Some(false)),
+      (Language::Toml, |config| config.toml_enabled = Some(false)),
+    ];
+    for (disabled, disable) in disable_fns {
+      let mut config = Configuration::default();
+      disable(&mut config);
+      let matched = paths(&config);
+      let mut unmatched_count = 0;
+      for path in &all_paths {
+        let language = FileKind::from_path(Path::new(path)).unwrap().language();
+        assert_eq!(matched.contains(path), language != disabled, "{path}");
+        unmatched_count += (language == disabled) as usize;
+      }
+      assert!(unmatched_count > 0, "{disabled:?}");
+    }
   }
 }

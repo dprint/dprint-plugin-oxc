@@ -26,6 +26,9 @@ pub fn format_text(file_path: &Path, input_text: &str, config: &Configuration) -
   let Some(file_kind) = FileKind::from_path(file_path) else {
     return Ok(None);
   };
+  if !config.is_language_enabled(file_kind.language()) {
+    return Ok(None);
+  }
 
   // a final newline is not inserted into an empty file
   if input_text.trim().is_empty() {

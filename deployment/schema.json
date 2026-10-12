@@ -206,6 +206,66 @@
       "type": "boolean",
       "default": true
     },
+    "javascript.enabled": {
+      "description": "Whether to format JavaScript and JSX files.",
+      "type": "boolean",
+      "default": true
+    },
+    "typescript.enabled": {
+      "description": "Whether to format TypeScript and TSX files.",
+      "type": "boolean",
+      "default": true
+    },
+    "json.enabled": {
+      "description": "Whether to format JSON files.",
+      "type": "boolean",
+      "default": true
+    },
+    "jsonc.enabled": {
+      "description": "Whether to format JSONC files.",
+      "type": "boolean",
+      "default": true
+    },
+    "json5.enabled": {
+      "description": "Whether to format JSON5 files.",
+      "type": "boolean",
+      "default": true
+    },
+    "graphql.enabled": {
+      "description": "Whether to format GraphQL files.",
+      "type": "boolean",
+      "default": true
+    },
+    "css.enabled": {
+      "description": "Whether to format CSS files.",
+      "type": "boolean",
+      "default": true
+    },
+    "scss.enabled": {
+      "description": "Whether to format SCSS files.",
+      "type": "boolean",
+      "default": true
+    },
+    "less.enabled": {
+      "description": "Whether to format Less files.",
+      "type": "boolean",
+      "default": true
+    },
+    "yaml.enabled": {
+      "description": "Whether to format YAML files.",
+      "type": "boolean",
+      "default": true
+    },
+    "markdown.enabled": {
+      "description": "Whether to format Markdown files.",
+      "type": "boolean",
+      "default": true
+    },
+    "toml.enabled": {
+      "description": "Whether to format TOML files.",
+      "type": "boolean",
+      "default": true
+    },
     "sortPackageJson": {
       "$ref": "#/definitions/sortPackageJson"
     },

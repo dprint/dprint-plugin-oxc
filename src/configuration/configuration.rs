@@ -317,4 +317,55 @@ pub struct Configuration {
   pub experimental_sort_imports: Option<SortImportsOptions>,
   pub experimental_tailwindcss: Option<TailwindcssOptions>,
   pub jsdoc: Option<JsdocOptions>,
+  pub javascript_enabled: Option<bool>,
+  pub typescript_enabled: Option<bool>,
+  pub json_enabled: Option<bool>,
+  pub jsonc_enabled: Option<bool>,
+  pub json5_enabled: Option<bool>,
+  pub graphql_enabled: Option<bool>,
+  pub css_enabled: Option<bool>,
+  pub scss_enabled: Option<bool>,
+  pub less_enabled: Option<bool>,
+  pub yaml_enabled: Option<bool>,
+  pub markdown_enabled: Option<bool>,
+  pub toml_enabled: Option<bool>,
+}
+
+impl Configuration {
+  /// Gets if the files of the language are formatted, which is the case
+  /// unless the language was turned off with its `<language>.enabled` option.
+  pub fn is_language_enabled(&self, language: Language) -> bool {
+    let enabled = match language {
+      Language::JavaScript => self.javascript_enabled,
+      Language::TypeScript => self.typescript_enabled,
+      Language::Json => self.json_enabled,
+      Language::Jsonc => self.jsonc_enabled,
+      Language::Json5 => self.json5_enabled,
+      Language::Graphql => self.graphql_enabled,
+      Language::Css => self.css_enabled,
+      Language::Scss => self.scss_enabled,
+      Language::Less => self.less_enabled,
+      Language::Yaml => self.yaml_enabled,
+      Language::Markdown => self.markdown_enabled,
+      Language::Toml => self.toml_enabled,
+    };
+    enabled != Some(false)
+  }
+}
+
+/// A language that can be turned off with its `<language>.enabled` option.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Language {
+  JavaScript,
+  TypeScript,
+  Json,
+  Jsonc,
+  Json5,
+  Graphql,
+  Css,
+  Scss,
+  Less,
+  Yaml,
+  Markdown,
+  Toml,
 }
