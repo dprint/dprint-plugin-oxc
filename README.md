@@ -13,11 +13,10 @@ The plugin formats the languages that Oxc's formatter (oxfmt) formats natively i
 - CSS, SCSS, and Less
 - GraphQL
 - YAML
+- Markdown
 - TOML
 
-Code embedded in these is formatted too (ex. CSS or GraphQL in a JS template literal, or YAML front matter in CSS).
-
-Markdown is also supported, though oxfmt does not use Oxc's Markdown formatter yet. Code blocks and front matter in Markdown files are not formatted.
+Code embedded in these is formatted too (ex. CSS or GraphQL in a JS template literal, YAML front matter in CSS, or code blocks in Markdown).
 
 If you only want to use this plugin for some of these languages, [disable the other languages](#disabling-languages).
 
