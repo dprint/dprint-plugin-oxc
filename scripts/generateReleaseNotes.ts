@@ -15,7 +15,7 @@ ${changelog}
 Then in your project's directory with a dprint.json file, run:
 
 \`\`\`shellsession
-dprint config add oxc
+dprint add oxc
 \`\`\`
 
 ## JS Formatting API

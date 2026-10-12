@@ -28,7 +28,7 @@ If you only want to use this plugin for some of these languages, list the plugin
 Then in your project's directory with a dprint.json file, run:
 
 ```shellsession
-dprint config add oxc
+dprint add oxc
 ```
 
 Note: You do not need Oxc installed globally as dprint will run the Oxc formatter from the .wasm file in a sandboxed environment.
