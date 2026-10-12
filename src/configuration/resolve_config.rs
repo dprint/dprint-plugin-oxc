@@ -91,6 +91,18 @@ pub fn resolve_config(
     experimental_sort_imports: resolve_sort_imports_options(&mut config, &mut diagnostics),
     experimental_tailwindcss: resolve_tailwindcss_options(&mut config, &mut diagnostics),
     jsdoc: resolve_jsdoc_options(&mut config, &mut diagnostics),
+    javascript_enabled: get_nullable_value(&mut config, "javascript.enabled", &mut diagnostics),
+    typescript_enabled: get_nullable_value(&mut config, "typescript.enabled", &mut diagnostics),
+    json_enabled: get_nullable_value(&mut config, "json.enabled", &mut diagnostics),
+    jsonc_enabled: get_nullable_value(&mut config, "jsonc.enabled", &mut diagnostics),
+    json5_enabled: get_nullable_value(&mut config, "json5.enabled", &mut diagnostics),
+    graphql_enabled: get_nullable_value(&mut config, "graphql.enabled", &mut diagnostics),
+    css_enabled: get_nullable_value(&mut config, "css.enabled", &mut diagnostics),
+    scss_enabled: get_nullable_value(&mut config, "scss.enabled", &mut diagnostics),
+    less_enabled: get_nullable_value(&mut config, "less.enabled", &mut diagnostics),
+    yaml_enabled: get_nullable_value(&mut config, "yaml.enabled", &mut diagnostics),
+    markdown_enabled: get_nullable_value(&mut config, "markdown.enabled", &mut diagnostics),
+    toml_enabled: get_nullable_value(&mut config, "toml.enabled", &mut diagnostics),
   };
 
   diagnostics.extend(get_unknown_property_diagnostics(config));

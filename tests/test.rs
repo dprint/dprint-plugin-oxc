@@ -91,6 +91,35 @@ fn should_format_markdown() {
 }
 
 #[test]
+fn should_not_format_disabled_languages() {
+  let config = resolve(serde_json::json!({
+    "markdown.enabled": false,
+    "typescript.enabled": false,
+    "jsonc.enabled": false,
+    "css.enabled": true,
+  }))
+  .config;
+  for (file_name, text) in [
+    ("file.md", "#   Title\n"),
+    ("README", "#   Title\n"),
+    ("file.ts", "a"),
+    ("file.tsx", "a"),
+    ("file.jsonc", "[1,2]"),
+  ] {
+    let result = format_text(&PathBuf::from(file_name), text, &config).unwrap();
+    assert_eq!(result, None, "{file_name}");
+  }
+  for (file_name, text, expected) in [
+    ("file.js", "a", "a;\n"),
+    ("file.json", "[1,2]", "[1, 2]\n"),
+    ("file.css", "a{b:c}", "a {\n  b: c;\n}\n"),
+  ] {
+    let result = format_text(&PathBuf::from(file_name), text, &config).unwrap();
+    assert_eq!(result.as_deref(), Some(expected), "{file_name}");
+  }
+}
+
+#[test]
 fn should_format_whitespace_only_file_as_empty() {
   let config = Configuration::default();
   for file_name in [
@@ -166,6 +195,8 @@ fn should_have_diagnostics_for_invalid_config() {
       "sortPackageJson.unknown",
     ),
     (serde_json::json!({ "proseWrap": "sometimes" }), "proseWrap"),
+    (serde_json::json!({ "markdown.enabled": "no" }), "markdown.enabled"),
+    (serde_json::json!({ "html.enabled": false }), "html.enabled"),
     (
       serde_json::json!({ "embeddedLanguageFormatting": "on" }),
       "embeddedLanguageFormatting",

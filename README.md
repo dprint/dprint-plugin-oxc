@@ -13,13 +13,12 @@ The plugin formats the languages that Oxc's formatter (oxfmt) formats natively i
 - CSS, SCSS, and Less
 - GraphQL
 - YAML
+- Markdown
 - TOML
 
-Code embedded in these is formatted too (ex. CSS or GraphQL in a JS template literal, or YAML front matter in CSS).
+Code embedded in these is formatted too (ex. CSS or GraphQL in a JS template literal, YAML front matter in CSS, or code blocks in Markdown).
 
-Markdown is also supported, but is opt-in via `"experimentalMarkdown": true` because oxfmt does not use Oxc's Markdown formatter yet. Code blocks and front matter in Markdown files are not formatted.
-
-If you only want to use this plugin for some of these languages, list the plugins you want to format the other languages before this one in your dprint.json, since dprint formats a file with the first plugin that matches it.
+If you only want to use this plugin for some of these languages, [disable the other languages](#disabling-languages).
 
 ## Install
 
@@ -53,6 +52,23 @@ To add configuration, specify an `"oxc"` key in your dprint.json:
 For an overview of the config, see https://dprint.dev/plugins/oxc/config/
 
 Like in oxfmt, the configuration is shared between the languages. For example, `quoteStyle` applies to JavaScript, CSS, YAML, and so on.
+
+### Disabling languages
+
+Every language is formatted by default. To have the plugin leave the files of a language alone, set its `<language>.enabled` option to `false`:
+
+```jsonc
+{
+  "oxc": {
+    "markdown.enabled": false,
+    "yaml.enabled": false,
+  },
+}
+```
+
+The languages are `javascript`, `typescript`, `json`, `jsonc`, `json5`, `graphql`, `css`, `scss`, `less`, `yaml`, `markdown`, and `toml`. JSX is part of `javascript` and TSX is part of `typescript`.
+
+A disabled language's files are no longer matched by this plugin, so dprint formats them with the next plugin that matches them, if any. This only decides which files are formatted: code embedded in a file of an enabled language is still formatted (ex. CSS in a JS template literal when `css.enabled` is `false`).
 
 Note: The plugin does not understand Oxc's configuration file because it runs sandboxed in a Wasm runtime—it has no access to the file system in order to read Oxc's config.
 
