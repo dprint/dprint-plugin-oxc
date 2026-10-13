@@ -28,6 +28,7 @@ use oxc_formatter_graphql::GraphqlFormatOptions;
 use oxc_formatter_json::JsonFormatOptions;
 use oxc_formatter_json::JsonVariant;
 use oxc_formatter_markdown::MarkdownFormatOptions;
+use oxc_formatter_toml::TomlFormatOptions;
 use oxc_formatter_yaml::YamlFormatOptions;
 
 use crate::configuration::Configuration;
@@ -387,20 +388,21 @@ pub fn build_markdown_options(config: &Configuration) -> MarkdownFormatOptions {
   options
 }
 
-pub fn build_toml_options(config: &Configuration) -> oxc_toml::Options {
-  let core_options = build_core_options(config);
-  oxc_toml::Options {
-    column_width: core_options.line_width.value() as usize,
-    indent_string: if core_options.indent_style.is_tab() {
-      "\t".to_string()
-    } else {
-      " ".repeat(core_options.indent_width.value() as usize)
-    },
-    crlf: core_options.line_ending.is_carriage_return_line_feed(),
-    array_trailing_comma: !matches!(config.trailing_commas, Some(crate::configuration::TrailingCommas::None)),
-    trailing_newline: true,
-    ..Default::default()
+pub fn build_toml_options(config: &Configuration) -> TomlFormatOptions {
+  let mut options = TomlFormatOptions::default();
+  options.apply_core(build_core_options(config));
+
+  // "all" and "es5" are indistinguishable for TOML arrays
+  if let Some(trailing_commas) = config.trailing_commas {
+    options.trailing_commas = match trailing_commas {
+      crate::configuration::TrailingCommas::All | crate::configuration::TrailingCommas::Es5 => {
+        oxc_formatter_toml::TrailingCommas::Always
+      }
+      crate::configuration::TrailingCommas::None => oxc_formatter_toml::TrailingCommas::Never,
+    };
   }
+
+  options
 }
 
 fn is_single_quote(config: &Configuration) -> Option<bool> {

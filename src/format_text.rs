@@ -133,13 +133,8 @@ fn format_markdown(input_text: &str, config: &Configuration) -> Result<String, F
 }
 
 fn format_toml(input_text: &str, config: &Configuration) -> Result<String, FormatError> {
-  // the formatter doesn't fail on a syntax error and instead leaves that part of the
-  // file as-is, which is not stable, so fail the same way the other languages do
-  if let Some(error) = oxc_toml::parse(input_text).errors.first() {
-    let (line, column) = line_and_column(input_text, error.range.start as usize);
-    return Err(format!("{} (line {}, column {})", error.message, line, column).into());
-  }
-  Ok(oxc_toml::format(input_text, build_toml_options(config)))
+  oxc_formatter_toml::format(input_text, build_toml_options(config))
+    .map_err(|e| to_format_error(e, input_text))
 }
 
 fn to_format_error(diagnostic: OxcDiagnostic, text: &str) -> FormatError {

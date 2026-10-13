@@ -1,0 +1,11 @@
+-- file.md --
+~~ embeddedLanguageFormatting: off ~~
+!! should preserve embedded TOML when formatting is off !!
+```toml
+a=1
+```
+
+[expect]
+```toml
+a=1
+```

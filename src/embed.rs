@@ -22,6 +22,7 @@ use oxc_formatter_json::JsonFormatOptions;
 use oxc_formatter_json::JsonVariant;
 use oxc_formatter_markdown::MarkdownFormatOptions;
 use oxc_formatter_markdown::XxxInMarkdownCodeBlock;
+use oxc_formatter_toml::TomlFormatOptions;
 use oxc_formatter_yaml::YamlFormatOptions;
 use oxc_span::SourceType;
 
@@ -33,6 +34,7 @@ use crate::options::build_graphql_options;
 use crate::options::build_js_options;
 use crate::options::build_json_options;
 use crate::options::build_markdown_options;
+use crate::options::build_toml_options;
 use crate::options::build_yaml_options;
 
 /// Builds the services of a root formatter run, which are what format the code that's
@@ -106,6 +108,7 @@ fn build_dispatcher(config: &Configuration) -> FormatDispatcher {
           is_css_in_js,
         ))
       }
+      "toml" => to_response(oxc_formatter_toml::format_to_ir(session, text, options.toml)),
       "yaml" | "yml" => to_response(oxc_formatter_yaml::format_to_ir(session, text, options.yaml)),
       "json" | "jsonc" | "json5" => {
         let variant = match request.language {
@@ -163,6 +166,7 @@ struct EmbeddedOptions {
   yaml: YamlFormatOptions,
   json: JsonFormatOptions,
   markdown: MarkdownFormatOptions,
+  toml: TomlFormatOptions,
 }
 
 impl EmbeddedOptions {
@@ -174,6 +178,7 @@ impl EmbeddedOptions {
       yaml: build_yaml_options(config),
       json: build_json_options(config, JsonVariant::Json),
       markdown: build_markdown_options(config),
+      toml: build_toml_options(config),
     }
   }
 }

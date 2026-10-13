@@ -36,3 +36,27 @@ Some _emphasis_ and **strong** text.
 ```js
 const x = 1;
 ```
+
+!! should format embedded TOML !!
+```toml
+a=1
+[package]
+name="example"
+```
+
+[expect]
+```toml
+a = 1
+[package]
+name = "example"
+```
+
+!! should preserve invalid embedded TOML !!
+```toml
+a = = 1
+```
+
+[expect]
+```toml
+a = = 1
+```

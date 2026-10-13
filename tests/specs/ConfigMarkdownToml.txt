@@ -1,0 +1,15 @@
+-- file.md --
+~~ trailingCommas: none, indentStyle: tab, lineWidth: 20 ~~
+!! should apply shared options to embedded TOML !!
+```toml
+list=["aaaaaaaa","bbbbbbbb","cccccccc"]
+```
+
+[expect]
+```toml
+list = [
+	"aaaaaaaa",
+	"bbbbbbbb",
+	"cccccccc"
+]
+```
