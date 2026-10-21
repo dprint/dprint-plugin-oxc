@@ -4,15 +4,8 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: ${{ matrix.config.kind }} ${{ matrix.config.os }}
-    runs-on: ${{ matrix.config.os }}
-    strategy:
-      matrix:
-        config:
-          - os: ubuntu-latest
-            kind: test_release
-          - os: ubuntu-latest
-            kind: test_debug
+    name: build
+    runs-on: ubuntu-latest
 
     env:
       CARGO_INCREMENTAL: 0
@@ -22,41 +15,30 @@ jobs:
     - uses: actions/checkout@v6
     - uses: dsherret/rust-toolchain-file@v1
     - name: Install wasm32 target
-      if: matrix.config.kind == 'test_release'
       run: rustup target add wasm32-unknown-unknown
 
     - uses: Swatinem/rust-cache@v2
       with:
         save-if: ${{ github.ref == 'refs/heads/main' }}
 
-    - name: Build debug
-      if: matrix.config.kind == 'test_debug'
-      run: cargo build
     - name: Build release
-      if: matrix.config.kind == 'test_release'
       run: cargo build --target wasm32-unknown-unknown --features wasm --release
 
-    - name: Test debug
-      if: matrix.config.kind == 'test_debug'
+    - name: Test
       run: cargo test
-    - name: Test release
-      if: matrix.config.kind == 'test_release'
-      run: cargo test --release
 
     - name: Get tag version
-      if: matrix.config.kind == 'test_release' && startsWith(github.ref, 'refs/tags/')
+      if: startsWith(github.ref, 'refs/tags/')
       id: get_tag_version
       run: echo ::set-output name=TAG_VERSION::${GITHUB_REF/refs\/tags\//}
 
     # NPM
     - uses: actions/setup-node@v6
-      if: matrix.config.kind == 'test_release'
       with:
         node-version: '24.x'
         registry-url: 'https://registry.npmjs.org'
 
     - name: Setup and test npm deployment
-      if: matrix.config.kind == 'test_release'
       run: |
         cd deployment/npm
         npm install
@@ -65,11 +47,11 @@ jobs:
 
       # GITHUB RELEASE
     - uses: denoland/setup-deno@v2
-      if: matrix.config.kind == 'test_release' && startsWith(github.ref, 'refs/tags/')
+      if: startsWith(github.ref, 'refs/tags/')
       with:
         deno-version: v2.x
     - name: Pre-release
-      if: matrix.config.kind == 'test_release' && startsWith(github.ref, 'refs/tags/')
+      if: startsWith(github.ref, 'refs/tags/')
       run: |
         # update config schema to have version
         sed -i 's/oxc\/0.0.0/oxc\/${{ steps.get_tag_version.outputs.TAG_VERSION }}/' deployment/schema.json
@@ -78,7 +60,7 @@ jobs:
         # create release notes
         deno run -A ./scripts/generateReleaseNotes.ts ${{ steps.get_tag_version.outputs.TAG_VERSION }} > ${{ github.workspace }}-CHANGELOG.txt
     - name: Release
-      if: matrix.config.kind == 'test_release' && startsWith(github.ref, 'refs/tags/')
+      if: startsWith(github.ref, 'refs/tags/')
       # gh uploads the assets to a draft and then publishes it, which immutable releases require
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
