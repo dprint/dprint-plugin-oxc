@@ -186,7 +186,7 @@ impl EmbeddedOptions {
 /// Embedded code that fails to parse is left as-is rather than failing to format the file.
 fn to_response<'a, E>(result: Result<EmbeddedIr<'a>, E>) -> DispatchResponse<'a> {
   match result {
-    Ok(embedded) => DispatchResponse::Formatted(embedded.into()),
+    Ok(embedded) => DispatchResponse::Formatted(embedded),
     Err(_) => DispatchResponse::PreserveOriginal,
   }
 }
