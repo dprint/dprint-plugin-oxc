@@ -145,9 +145,9 @@ checksum = "56254986775e3233ffa9c4d7d3faaf6d36a2c09d30b20687e9f88bc8bafc16c8"
 
 [[package]]
 name = "dprint-core"
-version = "0.70.0"
+version = "0.73.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6c66c17f6a0648b838e9a54fcf6ce2e237d060edbd3a65a724687d563fb8f28"
+checksum = "2353023fb71b872d7e2cf5283fd241e3144c74d842a0c302fc1fe4e05b4822c1"
 dependencies = [
  "indexmap",
  "serde",
@@ -169,7 +169,7 @@ dependencies = [
 
 [[package]]
 name = "dprint-plugin-oxc"
-version = "0.47.0"
+version = "0.48.0"
 dependencies = [
  "dprint-core",
  "dprint-development",
