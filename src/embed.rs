@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use oxc_allocator::Allocator;
 use oxc_formatter::CssInJsTemplate;
+use oxc_formatter::HtmlInJsTemplate;
 use oxc_formatter::JsEmbeddedIn;
 use oxc_formatter::MarkdownInJsTemplate;
 use oxc_formatter_core::DispatchRequest;
@@ -15,9 +16,15 @@ use oxc_formatter_core::PrintWidth;
 use oxc_formatter_core::PrinterOptions;
 use oxc_formatter_core::SessionServices;
 use oxc_formatter_core::StringEmbedder;
+use oxc_formatter_css::CssEmbeddedIn;
 use oxc_formatter_css::CssFormatOptions;
 use oxc_formatter_css::CssVariant;
 use oxc_formatter_graphql::GraphqlFormatOptions;
+use oxc_formatter_htmlish::CssInHtmlStyleAttribute;
+use oxc_formatter_htmlish::HtmlishEmbeddedIn;
+use oxc_formatter_htmlish::HtmlishFormatOptions;
+use oxc_formatter_htmlish::HtmlishVariant;
+use oxc_formatter_htmlish::JsInHtmlEventHandler;
 use oxc_formatter_json::JsonFormatOptions;
 use oxc_formatter_json::JsonVariant;
 use oxc_formatter_markdown::MarkdownFormatOptions;
@@ -31,6 +38,7 @@ use crate::configuration::EmbeddedLanguageFormatting;
 use crate::options::build_core_options;
 use crate::options::build_css_options;
 use crate::options::build_graphql_options;
+use crate::options::build_html_options;
 use crate::options::build_js_options;
 use crate::options::build_json_options;
 use crate::options::build_markdown_options;
@@ -77,7 +85,12 @@ fn build_dispatcher(config: &Configuration) -> FormatDispatcher {
         request
           .parent_context
           .and_then(|context| context.downcast_ref::<XxxInMarkdownCodeBlock>())
-          .map(|_| JsEmbeddedIn::MarkdownCodeBlock),
+          .map(|_| JsEmbeddedIn::MarkdownCodeBlock)
+          .or_else(|| {
+            request
+              .parent_context_as::<JsInHtmlEventHandler>()
+              .map(|_| JsEmbeddedIn::HtmlEventHandler)
+          }),
       )),
       "typescript" | "angular-ts" => to_response(oxc_formatter::format_to_ir(
         session,
@@ -87,7 +100,12 @@ fn build_dispatcher(config: &Configuration) -> FormatDispatcher {
         request
           .parent_context
           .and_then(|context| context.downcast_ref::<XxxInMarkdownCodeBlock>())
-          .map(|_| JsEmbeddedIn::MarkdownCodeBlock),
+          .map(|_| JsEmbeddedIn::MarkdownCodeBlock)
+          .or_else(|| {
+            request
+              .parent_context_as::<JsInHtmlEventHandler>()
+              .map(|_| JsEmbeddedIn::HtmlEventHandler)
+          }),
       )),
       "graphql" | "gql" => to_response(oxc_formatter_graphql::format_to_ir(session, text, options.graphql)),
       "css" | "postcss" | "scss" | "less" => {
@@ -105,7 +123,28 @@ fn build_dispatcher(config: &Configuration) -> FormatDispatcher {
           session,
           text,
           CssFormatOptions { variant, ..options.css },
-          is_css_in_js,
+          if is_css_in_js {
+            Some(CssEmbeddedIn::CssInJsTemplate)
+          } else {
+            request
+              .parent_context_as::<CssInHtmlStyleAttribute>()
+              .map(|_| CssEmbeddedIn::HtmlStyleAttribute)
+          },
+        ))
+      }
+      "html" => {
+        let embedded_in = request
+          .parent_context_as::<HtmlInJsTemplate>()
+          .map(|context| HtmlishEmbeddedIn {
+            indent_multiple_roots: context.indent_multiple_roots,
+            placeholder: Some(context.placeholder),
+          })
+          .or_else(|| (request.parent_context_as::<HtmlInJsdocFence>().is_none()).then(HtmlishEmbeddedIn::default));
+        to_response(oxc_formatter_htmlish::format_to_ir(
+          session,
+          text,
+          options.html.clone(),
+          embedded_in,
         ))
       }
       "toml" => to_response(oxc_formatter_toml::format_to_ir(session, text, options.toml)),
@@ -149,11 +188,16 @@ fn build_dispatcher(config: &Configuration) -> FormatDispatcher {
           request
             .parent_context
             .and_then(|context| context.downcast_ref::<XxxInMarkdownCodeBlock>())
-            .map(|_| JsEmbeddedIn::MarkdownCodeBlock),
+            .map(|_| JsEmbeddedIn::MarkdownCodeBlock)
+            .or_else(|| {
+              request
+                .parent_context_as::<JsInHtmlEventHandler>()
+                .map(|_| JsEmbeddedIn::HtmlEventHandler)
+            }),
         )),
         Err(_) => DispatchResponse::PreserveOriginal,
       },
-      // oxfmt formats these with Prettier (ex. html) or not at all
+      // oxfmt formats other languages with Prettier or not at all
     })
   })
 }
@@ -167,6 +211,7 @@ struct EmbeddedOptions {
   json: JsonFormatOptions,
   markdown: MarkdownFormatOptions,
   toml: TomlFormatOptions,
+  html: HtmlishFormatOptions,
 }
 
 impl EmbeddedOptions {
@@ -179,6 +224,7 @@ impl EmbeddedOptions {
       json: build_json_options(config, JsonVariant::Json),
       markdown: build_markdown_options(config),
       toml: build_toml_options(config),
+      html: build_html_options(config, HtmlishVariant::Html),
     }
   }
 }
@@ -190,6 +236,9 @@ fn to_response<'a, E>(result: Result<EmbeddedIr<'a>, E>) -> DispatchResponse<'a>
     Err(_) => DispatchResponse::PreserveOriginal,
   }
 }
+
+// marks a standalone HTML document in a JSDoc fence
+struct HtmlInJsdocFence;
 
 /// Formats a fenced code block in a JSDoc comment, where an error keeps the block as-is.
 fn format_fence(
@@ -217,7 +266,7 @@ fn format_fence(
         language,
         text: code,
         input_kind: InputKind::Fragment,
-        parent_context: None,
+        parent_context: Some(&HtmlInJsdocFence),
       },
       printer_options,
     )?

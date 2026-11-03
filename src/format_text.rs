@@ -6,6 +6,7 @@ use oxc_diagnostics::OxcDiagnostic;
 use oxc_formatter_core::FormatSession;
 use oxc_formatter_core::InputKind;
 use oxc_formatter_css::CssVariant;
+use oxc_formatter_htmlish::HtmlishVariant;
 use oxc_formatter_json::JsonVariant;
 use oxc_span::SourceType;
 
@@ -14,6 +15,7 @@ use crate::embed::build_session_services;
 use crate::file_kind::FileKind;
 use crate::options::build_css_options;
 use crate::options::build_graphql_options;
+use crate::options::build_html_options;
 use crate::options::build_js_options;
 use crate::options::build_json_options;
 use crate::options::build_markdown_options;
@@ -53,6 +55,7 @@ pub fn format_text(file_path: &Path, input_text: &str, config: &Configuration) -
     },
     FileKind::Markdown => format_markdown(input_text, config)?,
     FileKind::Toml => format_toml(input_text, config)?,
+    FileKind::Html(variant) => format_html(input_text, variant, config)?,
   };
 
   // every formatter ends its output with a newline
@@ -132,9 +135,16 @@ fn format_markdown(input_text: &str, config: &Configuration) -> Result<String, F
   Ok(formatted.print().map_err(|e| e.to_string())?.into_code())
 }
 
+fn format_html(input_text: &str, variant: HtmlishVariant, config: &Configuration) -> Result<String, FormatError> {
+  let allocator = Allocator::default();
+  let session = FormatSession::with_services(&allocator, InputKind::PhysicalFile, build_session_services(config));
+  let formatted = oxc_formatter_htmlish::format_with_session(&session, input_text, build_html_options(config, variant))
+    .map_err(|e| to_format_error(e, input_text))?;
+  Ok(formatted.print().map_err(|e| e.to_string())?.into_code())
+}
+
 fn format_toml(input_text: &str, config: &Configuration) -> Result<String, FormatError> {
-  oxc_formatter_toml::format(input_text, build_toml_options(config))
-    .map_err(|e| to_format_error(e, input_text))
+  oxc_formatter_toml::format(input_text, build_toml_options(config)).map_err(|e| to_format_error(e, input_text))
 }
 
 fn to_format_error(diagnostic: OxcDiagnostic, text: &str) -> FormatError {

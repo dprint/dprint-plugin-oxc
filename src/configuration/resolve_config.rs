@@ -102,6 +102,8 @@ pub fn resolve_config(
     less_enabled: get_nullable_value(&mut config, "less.enabled", &mut diagnostics),
     yaml_enabled: get_nullable_value(&mut config, "yaml.enabled", &mut diagnostics),
     markdown_enabled: get_nullable_value(&mut config, "markdown.enabled", &mut diagnostics),
+    html_enabled: get_nullable_value(&mut config, "html.enabled", &mut diagnostics),
+    html_whitespace_sensitivity: get_nullable_value(&mut config, "htmlWhitespaceSensitivity", &mut diagnostics),
     toml_enabled: get_nullable_value(&mut config, "toml.enabled", &mut diagnostics),
   };
 

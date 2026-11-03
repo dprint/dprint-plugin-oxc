@@ -1,0 +1,7 @@
+== HTML template ==
+const page = html`<div><p>hello</p><p>world</p></div>`;
+[expect]
+const page = html`<div>
+  <p>hello</p>
+  <p>world</p>
+</div>`;

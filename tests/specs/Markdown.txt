@@ -60,3 +60,15 @@ a = = 1
 ```toml
 a = = 1
 ```
+
+!! should format embedded HTML !!
+```html
+<div><p>hello</p><p>world</p></div>
+```
+[expect]
+```html
+<div>
+  <p>hello</p>
+  <p>world</p>
+</div>
+```

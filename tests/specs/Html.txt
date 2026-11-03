@@ -1,0 +1,25 @@
+-- file.html --
+== basic HTML ==
+<div><p>hello</p><p>world</p></div>
+[expect]
+<div>
+  <p>hello</p>
+  <p>world</p>
+</div>
+
+== embedded languages ==
+<style>a{color:red}</style><script>const x=1</script>
+[expect]
+<style>
+  a {
+    color: red;
+  }
+</style>
+<script>
+  const x = 1;
+</script>
+
+== style attributes and event handlers ==
+<div style="color:red;margin:0" onclick="foo( 1,2 )"></div>
+[expect]
+<div style="color: red; margin: 0" onclick="foo(1, 2)"></div>

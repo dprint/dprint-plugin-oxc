@@ -57,6 +57,7 @@ fn should_fail_on_parse_error_other_languages() {
     ("file.css", "a { color: red"),
     ("file.scss", "a { b: { }"),
     ("file.less", "a { b: { }"),
+    ("file.html", "<div"),
     ("file.toml", "a = = 1"),
     ("file.yaml", "a: [1, 2"),
     (".prettierrc", "a: [1, 2"),
@@ -71,7 +72,7 @@ fn should_not_format_unknown_or_excluded_files() {
   let config = Configuration::default();
   for file_name in [
     "file.txt",
-    "file.html",
+    "app.component.html",
     "package-lock.json",
     "pnpm-lock.yaml",
     "Cargo.lock",
@@ -94,12 +95,14 @@ fn should_format_markdown() {
 fn should_not_format_disabled_languages() {
   let config = resolve(serde_json::json!({
     "markdown.enabled": false,
+    "html.enabled": false,
     "typescript.enabled": false,
     "jsonc.enabled": false,
     "css.enabled": true,
   }))
   .config;
   for (file_name, text) in [
+    ("file.html", "<div>  text </div>"),
     ("file.md", "#   Title\n"),
     ("README", "#   Title\n"),
     ("file.ts", "a"),
@@ -129,6 +132,7 @@ fn should_format_whitespace_only_file_as_empty() {
     "file.yaml",
     "file.md",
     "file.toml",
+    "file.html",
     "file.graphql",
   ] {
     let path = PathBuf::from(file_name);
@@ -151,6 +155,7 @@ fn should_use_line_ending() {
     ("file.yaml", "a: 1\nb: 2\n", "a: 1\r\nb: 2\r\n"),
     ("file.md", "a\n\nb\n", "a\r\n\r\nb\r\n"),
     ("file.toml", "a=1\nb=2\n", "a = 1\r\nb = 2\r\n"),
+    ("file.html", "<div>text</div>", "<div>text</div>\r\n"),
     ("file.graphql", "{a}", "{\r\n  a\r\n}\r\n"),
   ] {
     let result = format_text(&PathBuf::from(file_name), text, &config).unwrap();
@@ -195,8 +200,12 @@ fn should_have_diagnostics_for_invalid_config() {
       "sortPackageJson.unknown",
     ),
     (serde_json::json!({ "proseWrap": "sometimes" }), "proseWrap"),
+    (
+      serde_json::json!({ "htmlWhitespaceSensitivity": "sometimes" }),
+      "htmlWhitespaceSensitivity",
+    ),
     (serde_json::json!({ "markdown.enabled": "no" }), "markdown.enabled"),
-    (serde_json::json!({ "html.enabled": false }), "html.enabled"),
+    (serde_json::json!({ "html.enabled": "no" }), "html.enabled"),
     (
       serde_json::json!({ "embeddedLanguageFormatting": "on" }),
       "embeddedLanguageFormatting",

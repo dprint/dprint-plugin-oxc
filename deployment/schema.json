@@ -124,12 +124,12 @@
       "type": "boolean"
     },
     "bracketSameLine": {
-      "description": "Place the last angle bracket in JSX tags on the same line as the last attribute.",
+      "description": "Place the last angle bracket in HTML and JSX tags on the same line as the last attribute.",
       "default": false,
       "type": "boolean"
     },
     "attributePosition": {
-      "description": "How JSX/TSX attributes are positioned.",
+      "description": "How HTML and JSX/TSX attributes are positioned.",
       "type": "string",
       "default": "auto",
       "oneOf": [{
@@ -170,7 +170,7 @@
       "default": false
     },
     "htmlWhitespaceSensitivityIgnore": {
-      "description": "Whether HTML-in-JS templates always use hard line breaks for wrapping.",
+      "description": "Whether HTML and HTML-in-JS templates always use hard line breaks for wrapping. Used when htmlWhitespaceSensitivity is unset.",
       "type": "boolean",
       "default": false
     },
@@ -260,6 +260,21 @@
       "description": "Whether to format Markdown files.",
       "type": "boolean",
       "default": true
+    },
+    "html.enabled": {
+      "description": "Whether to format HTML and XHTML files.",
+      "type": "boolean",
+      "default": true
+    },
+    "htmlWhitespaceSensitivity": {
+      "description": "Whitespace sensitivity in HTML and HTML-in-JS templates. Takes precedence over htmlWhitespaceSensitivityIgnore.",
+      "type": "string",
+      "default": "css",
+      "enum": [
+        "css",
+        "strict",
+        "ignore"
+      ]
     },
     "toml.enabled": {
       "description": "Whether to format TOML files.",

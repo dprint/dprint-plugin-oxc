@@ -1,0 +1,6 @@
+-- file.html --
+~~ htmlWhitespaceSensitivity: strict ~~
+== strict whitespace keeps adjacent elements together ==
+<span>a</span><span>b</span>
+[expect]
+<span>a</span><span>b</span>

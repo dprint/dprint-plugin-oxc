@@ -1,0 +1,11 @@
+-- file.html --
+~~ htmlWhitespaceSensitivity: ignore, attributePosition: multiline, bracketSameLine: true, indentWidth: 4 ~~
+== HTML shared options ==
+<div id="a" class="b"><span>a</span><span>b</span></div>
+[expect]
+<div
+    id="a"
+    class="b">
+    <span>a</span>
+    <span>b</span>
+</div>

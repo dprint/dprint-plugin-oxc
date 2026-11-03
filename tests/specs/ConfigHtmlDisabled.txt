@@ -1,0 +1,6 @@
+-- file.html --
+~~ html.enabled: false ~~
+== disabled HTML remains unchanged ==
+<div><p>hello</p><p>world</p></div>
+[expect]
+<div><p>hello</p><p>world</p></div>

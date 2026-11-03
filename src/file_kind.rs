@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use oxc_formatter_css::CssVariant;
+use oxc_formatter_htmlish::HtmlishVariant;
 use oxc_formatter_json::JsonVariant;
 use oxc_span::SourceType;
 
@@ -24,6 +25,7 @@ pub enum FileKind {
   YamlRc,
   Markdown,
   Toml,
+  Html(HtmlishVariant),
 }
 
 impl FileKind {
@@ -94,6 +96,16 @@ impl FileKind {
     if contains(MARKDOWN_FILE_NAMES, file_name) || has_extension(MARKDOWN_EXTENSIONS) {
       return Some(FileKind::Markdown);
     }
+    if !file_name.ends_with(".component.html") {
+      let variant = match extension {
+        Some("html" | "hta" | "htm" | "inc") => Some(HtmlishVariant::Html),
+        Some("xhtml" | "xht") => Some(HtmlishVariant::Xhtml),
+        _ => None,
+      };
+      if let Some(variant) = variant {
+        return Some(FileKind::Html(variant));
+      }
+    }
     None
   }
 
@@ -113,6 +125,7 @@ impl FileKind {
       FileKind::Yaml | FileKind::YamlRc => Language::Yaml,
       FileKind::Markdown => Language::Markdown,
       FileKind::Toml => Language::Toml,
+      FileKind::Html(_) => Language::Html,
     }
   }
 }
@@ -126,6 +139,7 @@ pub fn file_extensions(config: &Configuration) -> Vec<String> {
       (Language::JavaScript, JS_EXTENSIONS),
       (Language::JavaScript, ADDITIONAL_JS_EXTENSIONS),
       (Language::Toml, &["toml"]),
+      (Language::Html, &["html", "hta", "htm", "inc", "xhtml", "xht"]),
       (Language::Json, &["importmap"]),
       (Language::Json, JSON_EXTENSIONS),
       (Language::Jsonc, JSONC_EXTENSIONS),
@@ -367,6 +381,17 @@ mod test {
     assert_eq!(kind("README.md"), Some(FileKind::Markdown));
     assert_eq!(kind("Cargo.toml"), Some(FileKind::Toml));
     assert_eq!(kind("Pipfile"), Some(FileKind::Toml));
+    for ext in ["html", "htm", "hta", "inc"] {
+      assert_eq!(kind(&format!("file.{ext}")), Some(FileKind::Html(HtmlishVariant::Html)));
+    }
+    for ext in ["xhtml", "xht"] {
+      assert_eq!(
+        kind(&format!("file.{ext}")),
+        Some(FileKind::Html(HtmlishVariant::Xhtml))
+      );
+    }
+    assert_eq!(kind("app.component.html"), None);
+    assert_eq!(kind("file.vue"), None);
     assert_eq!(kind("file.txt"), None);
   }
 
@@ -441,7 +466,7 @@ mod test {
     };
     let all_paths = paths(&Configuration::default());
     type DisableFn = fn(&mut Configuration);
-    let disable_fns: [(Language, DisableFn); 12] = [
+    let disable_fns: [(Language, DisableFn); 13] = [
       (Language::JavaScript, |config| config.javascript_enabled = Some(false)),
       (Language::TypeScript, |config| config.typescript_enabled = Some(false)),
       (Language::Json, |config| config.json_enabled = Some(false)),
@@ -454,6 +479,7 @@ mod test {
       (Language::Yaml, |config| config.yaml_enabled = Some(false)),
       (Language::Markdown, |config| config.markdown_enabled = Some(false)),
       (Language::Toml, |config| config.toml_enabled = Some(false)),
+      (Language::Html, |config| config.html_enabled = Some(false)),
     ];
     for (disabled, disable) in disable_fns {
       let mut config = Configuration::default();

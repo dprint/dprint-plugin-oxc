@@ -1,0 +1,6 @@
+-- file.xhtml --
+== XHTML closes non-void elements ==
+<div/><p>hello</p>
+[expect]
+<div />
+<p>hello</p>

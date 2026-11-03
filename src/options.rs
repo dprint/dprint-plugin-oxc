@@ -25,6 +25,9 @@ use oxc_formatter_core::LineWidth;
 use oxc_formatter_css::CssFormatOptions;
 use oxc_formatter_css::CssVariant;
 use oxc_formatter_graphql::GraphqlFormatOptions;
+use oxc_formatter_htmlish::HtmlishFormatOptions;
+use oxc_formatter_htmlish::HtmlishVariant;
+use oxc_formatter_htmlish::WhitespaceSensitivity;
 use oxc_formatter_json::JsonFormatOptions;
 use oxc_formatter_json::JsonVariant;
 use oxc_formatter_markdown::MarkdownFormatOptions;
@@ -155,6 +158,11 @@ pub fn build_js_options(config: &Configuration) -> JsFormatOptions {
 
   if let Some(html_whitespace_sensitivity_ignore) = config.html_whitespace_sensitivity_ignore {
     options.html_whitespace_sensitivity_ignore = html_whitespace_sensitivity_ignore;
+  }
+
+  if let Some(sensitivity) = config.html_whitespace_sensitivity {
+    options.html_whitespace_sensitivity_ignore =
+      matches!(sensitivity, crate::configuration::HtmlWhitespaceSensitivity::Ignore);
   }
 
   options.sort_imports = config
@@ -402,6 +410,30 @@ pub fn build_toml_options(config: &Configuration) -> TomlFormatOptions {
     };
   }
 
+  options
+}
+
+pub fn build_html_options(config: &Configuration, variant: HtmlishVariant) -> HtmlishFormatOptions {
+  let mut options = HtmlishFormatOptions {
+    variant,
+    ..Default::default()
+  };
+  options.apply_core(build_core_options(config));
+  if let Some(sensitivity) = config.html_whitespace_sensitivity {
+    options.whitespace_sensitivity = match sensitivity {
+      crate::configuration::HtmlWhitespaceSensitivity::Css => WhitespaceSensitivity::Css,
+      crate::configuration::HtmlWhitespaceSensitivity::Strict => WhitespaceSensitivity::Strict,
+      crate::configuration::HtmlWhitespaceSensitivity::Ignore => WhitespaceSensitivity::Ignore,
+    };
+  } else if config.html_whitespace_sensitivity_ignore == Some(true) {
+    options.whitespace_sensitivity = WhitespaceSensitivity::Ignore;
+  }
+  if let Some(value) = config.bracket_same_line {
+    options.bracket_same_line = value;
+  }
+  if let Some(value) = config.attribute_position {
+    options.single_attribute_per_line = matches!(value, crate::configuration::AttributePosition::Multiline);
+  }
   options
 }
 

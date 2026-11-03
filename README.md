@@ -15,6 +15,7 @@ The plugin formats the languages that Oxc's formatter (oxfmt) formats natively i
 - YAML
 - Markdown
 - TOML
+- HTML and XHTML
 
 Code embedded in these is formatted too (ex. CSS or GraphQL in a JS template literal, YAML front matter in CSS, or code blocks in Markdown).
 
@@ -66,7 +67,7 @@ Every language is formatted by default. To have the plugin leave the files of a 
 }
 ```
 
-The languages are `javascript`, `typescript`, `json`, `jsonc`, `json5`, `graphql`, `css`, `scss`, `less`, `yaml`, `markdown`, and `toml`. JSX is part of `javascript` and TSX is part of `typescript`.
+The languages are `javascript`, `typescript`, `json`, `jsonc`, `json5`, `graphql`, `css`, `scss`, `less`, `yaml`, `markdown`, `toml`, and `html`. JSX is part of `javascript` and TSX is part of `typescript`.
 
 A disabled language's files are no longer matched by this plugin, so dprint formats them with the next plugin that matches them, if any. This only decides which files are formatted: code embedded in a file of an enabled language is still formatted (ex. CSS in a JS template literal when `css.enabled` is `false`).
 

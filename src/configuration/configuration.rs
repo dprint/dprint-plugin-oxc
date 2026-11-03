@@ -102,6 +102,21 @@ generate_str_to_from![OperatorPosition, [Start, "start"], [End, "end"]];
 
 #[derive(Clone, PartialEq, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub enum HtmlWhitespaceSensitivity {
+  Css,
+  Strict,
+  Ignore,
+}
+
+generate_str_to_from![
+  HtmlWhitespaceSensitivity,
+  [Css, "css"],
+  [Strict, "strict"],
+  [Ignore, "ignore"]
+];
+
+#[derive(Clone, PartialEq, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum ProseWrap {
   Preserve,
   Always,
@@ -308,6 +323,7 @@ pub struct Configuration {
   pub expand: Option<Expand>,
   pub operator_position: Option<OperatorPosition>,
   pub experimental_ternaries: Option<bool>,
+  pub html_whitespace_sensitivity: Option<HtmlWhitespaceSensitivity>,
   pub html_whitespace_sensitivity_ignore: Option<bool>,
   pub prose_wrap: Option<ProseWrap>,
   pub embedded_language_formatting: Option<EmbeddedLanguageFormatting>,
@@ -329,6 +345,7 @@ pub struct Configuration {
   pub yaml_enabled: Option<bool>,
   pub markdown_enabled: Option<bool>,
   pub toml_enabled: Option<bool>,
+  pub html_enabled: Option<bool>,
 }
 
 impl Configuration {
@@ -348,6 +365,7 @@ impl Configuration {
       Language::Yaml => self.yaml_enabled,
       Language::Markdown => self.markdown_enabled,
       Language::Toml => self.toml_enabled,
+      Language::Html => self.html_enabled,
     };
     enabled != Some(false)
   }
@@ -368,4 +386,5 @@ pub enum Language {
   Yaml,
   Markdown,
   Toml,
+  Html,
 }
