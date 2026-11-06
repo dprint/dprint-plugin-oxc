@@ -2,6 +2,106 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://plugins.dprint.dev/dprint/dprint-plugin-oxc/0.0.0/schema.json",
   "type": "object",
+  "x-playground": {
+    "input": [
+      "import {readFile} from 'node:fs/promises'",
+      "import type {Config} from \"./config.ts\"",
+      "",
+      "interface Task{id:number;title:string;done?:boolean}",
+      "",
+      "export async function loadTasks(path:string,config:Config):Promise<Task[]>{",
+      "  const text=await readFile(path,'utf8')",
+      "    const tasks:Task[]=JSON.parse(text)",
+      "  return tasks.filter(task=>config.showDone||!task.done).sort((a,b)=>a.id-b.id)",
+      "}",
+      "",
+      "export class TaskList{",
+      "  private tasks=new Map<number,Task>()",
+      "  add(task:Task){this.tasks.set(task.id,task);return this}",
+      "  get size(){return this.tasks.size}",
+      "}",
+      "",
+      "const drafts=['write docs',\"fix bug\"].map(title=>({title,done:false}))",
+      "console.log(`created ${drafts.length} drafts`)"
+    ]
+  },
+  "x-sections": [{
+    "title": "General",
+    "description": "The width, indentation, and line endings of all the files.",
+    "properties": [
+      "lineWidth",
+      "indentWidth",
+      "indentStyle",
+      "lineEnding",
+      "insertFinalNewline"
+    ]
+  }, {
+    "title": "Semicolons, commas, and quotes",
+    "description": "The punctuation that's added or removed.",
+    "properties": [
+      "semicolons",
+      "trailingCommas",
+      "quoteStyle",
+      "jsxQuoteStyle",
+      "quoteProperties",
+      "arrowParentheses"
+    ]
+  }, {
+    "title": "Line breaks and spaces",
+    "description": "How code that doesn't fit within the line width is split up, and the spaces within braces.",
+    "properties": [
+      "expand",
+      "operatorPosition",
+      "experimentalTernaries",
+      "bracketSpacing",
+      "proseWrap"
+    ]
+  }, {
+    "title": "HTML and JSX",
+    "description": "The formatting of HTML and JSX elements and their attributes.",
+    "properties": [
+      "bracketSameLine",
+      "attributePosition",
+      "htmlWhitespaceSensitivity",
+      "htmlWhitespaceSensitivityIgnore"
+    ]
+  }, {
+    "title": "Sorting",
+    "description": "The sorting of imports, `package.json` properties, and Tailwind CSS classes.",
+    "properties": [
+      "sortImports",
+      "experimentalSortImports",
+      "sortPackageJson",
+      "experimentalSortPackageJson",
+      "sortTailwindcss",
+      "experimentalTailwindcss"
+    ]
+  }, {
+    "title": "Embedded code and comments",
+    "description": "The formatting of code embedded in other code and of JSDoc comments.",
+    "properties": [
+      "embeddedLanguageFormatting",
+      "jsdoc"
+    ]
+  }, {
+    "title": "Languages",
+    "description": "The languages that are formatted.",
+    "properties": [
+      "javascript.enabled",
+      "typescript.enabled",
+      "json.enabled",
+      "jsonc.enabled",
+      "json5.enabled",
+      "graphql.enabled",
+      "css.enabled",
+      "scss.enabled",
+      "less.enabled",
+      "yaml.enabled",
+      "markdown.enabled",
+      "html.enabled",
+      "toml.enabled"
+    ]
+  }],
   "properties": {
     "lineEnding": {
       "description": "The kind of line ending.",
@@ -19,9 +119,11 @@
       }]
     },
     "indentWidth": {
-      "description": "The number of characters for an indent.",
+      "description": "The number of characters for an indent. Oxc supports 0 to 24, and other values use the default.",
       "default": 2,
-      "type": "number"
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
     },
     "indentStyle": {
       "description": "Whether to use tabs or spaces.",
@@ -33,12 +135,23 @@
       }, {
         "const": "space",
         "description": "Use spaces."
-      }]
+      }],
+      "x-example": {
+        "input": [
+          "function run() {",
+          "  if (isReady) {",
+          "    start();",
+          "  }",
+          "}"
+        ]
+      }
     },
     "lineWidth": {
-      "description": "How many characters can be written on a single line.",
+      "description": "How many characters can be written on a single line. Oxc supports 1 to 320, and other values use the default.",
       "default": 100,
-      "type": "number"
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535
     },
     "semicolons": {
       "description": "Whether to use semicolons.",
@@ -50,7 +163,14 @@
       }, {
         "const": "asNeeded",
         "description": "Semicolons are added only in places where it's needed, to protect from ASI."
-      }]
+      }],
+      "x-example": {
+        "input": [
+          "const value = 5",
+          "let items = [first, second];",
+          ";[1, 2].forEach(log)"
+        ]
+      }
     },
     "quoteStyle": {
       "description": "The type of quote used when representing string literals. Applies to JS/TS, CSS/SCSS/Less, JSON5, YAML, and Markdown.",
@@ -62,7 +182,14 @@
       }, {
         "const": "single",
         "description": "Use single quotes."
-      }]
+      }],
+      "x-example": {
+        "input": [
+          "const single = 'text';",
+          "const double = \"text\";",
+          "const containsDouble = 'say \"hi\"';"
+        ]
+      }
     },
     "jsxQuoteStyle": {
       "description": "The type of quote used in JSX attributes.",
@@ -74,7 +201,14 @@
       }, {
         "const": "single",
         "description": "Use single quotes."
-      }]
+      }],
+      "x-example": {
+        "extension": "tsx",
+        "input": [
+          "const label = 'text';",
+          "const element = <div title='text' alt=\"say 'hi'\" />;"
+        ]
+      }
     },
     "quoteProperties": {
       "description": "Whether property names inside objects should be quoted. Applies to JS/TS and JSON5.",
@@ -89,7 +223,13 @@
       }, {
         "const": "consistent",
         "description": "All properties are quoted if any property requires quoting."
-      }]
+      }],
+      "x-example": {
+        "input": [
+          "const first = { \"a\": 1, b: 2 };",
+          "const second = { \"c-d\": 1, e: 2 };"
+        ]
+      }
     },
     "arrowParentheses": {
       "description": "Whether to add non-necessary parentheses to arrow functions.",
@@ -101,10 +241,16 @@
       }, {
         "const": "asNeeded",
         "description": "Parentheses are added only when necessary."
-      }]
+      }],
+      "x-example": {
+        "input": [
+          "const double = x => x * 2;",
+          "const triple = (x) => x * 3;"
+        ]
+      }
     },
     "trailingCommas": {
-      "description": "Print trailing commas wherever possible in multi-line comma-separated syntactic structures. Outside of JS/TS, \"all\" and \"es5\" are the same and this applies to JSONC, JSON5, SCSS maps, YAML flow collections, and TOML arrays.",
+      "description": "Print trailing commas wherever possible in multi-line comma-separated syntactic structures. Outside of JS/TS, `all` and `es5` are the same and this applies to JSONC, JSON5, SCSS maps, YAML flow collections, and TOML arrays.",
       "type": "string",
       "default": "all",
       "oneOf": [{
@@ -116,17 +262,37 @@
       }, {
         "const": "none",
         "description": "Trailing commas are never added."
-      }]
+      }],
+      "x-example": {
+        "config": { "lineWidth": 40 },
+        "input": [
+          "function createUser(firstName: string, lastName: string) {}",
+          "const values = [firstValue, secondValue, thirdValue];"
+        ]
+      }
     },
     "bracketSpacing": {
       "description": "Surround the inner contents of some braces with spaces. Applies to JS/TS, JSON, GraphQL, and YAML.",
       "default": true,
-      "type": "boolean"
+      "type": "boolean",
+      "x-example": {
+        "input": [
+          "import {first, second} from \"./module.ts\";",
+          "const {x, y} = point;"
+        ]
+      }
     },
     "bracketSameLine": {
       "description": "Place the last angle bracket in HTML and JSX tags on the same line as the last attribute.",
       "default": false,
-      "type": "boolean"
+      "type": "boolean",
+      "x-example": {
+        "config": { "lineWidth": 40 },
+        "extension": "tsx",
+        "input": [
+          "const element = <Button kind=\"primary\" size=\"large\" onClick={save}>Save</Button>;"
+        ]
+      }
     },
     "attributePosition": {
       "description": "How HTML and JSX/TSX attributes are positioned.",
@@ -138,7 +304,13 @@
       }, {
         "const": "multiline",
         "description": "Each attribute is placed on its own line."
-      }]
+      }],
+      "x-example": {
+        "extension": "tsx",
+        "input": [
+          "const element = <input type=\"text\" value={name} />;"
+        ]
+      }
     },
     "expand": {
       "description": "Whether to expand object and array literals to multiple lines. Applies to JS/TS and JSON.",
@@ -150,7 +322,15 @@
       }, {
         "const": "never",
         "description": "Objects and arrays are never expanded, if they are shorter than the line width."
-      }]
+      }],
+      "x-example": {
+        "input": [
+          "const point = {",
+          "  x: 1, y: 2 };",
+          "const size = { width: 10,",
+          "  height: 20 };"
+        ]
+      }
     },
     "operatorPosition": {
       "description": "Controls the position of operators in binary expressions when they wrap lines.",
@@ -162,17 +342,31 @@
       }, {
         "const": "end",
         "description": "Places the operator at the end of the current line."
-      }]
+      }],
+      "x-example": {
+        "config": { "lineWidth": 40 },
+        "input": [
+          "const isValid = firstCondition && secondCondition && thirdCondition;"
+        ]
+      }
     },
     "experimentalTernaries": {
-      "description": "[EXPERIMENTAL - NOT FULLY SUPPORTED] Try prettier's new ternary formatting before it becomes the default behavior.",
+      "description": "[EXPERIMENTAL - NOT FULLY SUPPORTED] Try Prettier's new ternary formatting before it becomes the default behavior.",
       "type": "boolean",
       "default": false
     },
     "htmlWhitespaceSensitivityIgnore": {
-      "description": "Whether HTML and HTML-in-JS templates always use hard line breaks for wrapping. Used when htmlWhitespaceSensitivity is unset.",
+      "description": "Whether HTML and HTML-in-JS templates always use hard line breaks for wrapping. Used when `htmlWhitespaceSensitivity` is unset.",
       "type": "boolean",
-      "default": false
+      "default": false,
+      "x-example": {
+        "config": { "lineWidth": 40 },
+        "extension": "html",
+        "input": [
+          "<span class=\"first second\">Some text in a span element.</span>",
+          "<div class=\"first second\">Some text in a div element.</div>"
+        ]
+      }
     },
     "proseWrap": {
       "description": "How to wrap prose in YAML and Markdown.",
@@ -187,7 +381,17 @@
       }, {
         "const": "never",
         "description": "Unwrap each block of prose onto a single line."
-      }]
+      }],
+      "x-example": {
+        "config": { "lineWidth": 40 },
+        "extension": "md",
+        "input": [
+          "This is a long paragraph of text that goes over the line width.",
+          "",
+          "This paragraph",
+          "has a line break."
+        ]
+      }
     },
     "embeddedLanguageFormatting": {
       "description": "Whether to format code embedded in a file (ex. CSS or GraphQL in a JS template literal, code blocks in JSDoc comments, or front matter in CSS).",
@@ -199,7 +403,14 @@
       }, {
         "const": "off",
         "description": "Never format embedded code."
-      }]
+      }],
+      "x-example": {
+        "input": [
+          "const styles = css`",
+          "  .button{color:red;margin:0 auto}",
+          "`;"
+        ]
+      }
     },
     "insertFinalNewline": {
       "description": "Whether to end files with a newline.",
@@ -267,14 +478,27 @@
       "default": true
     },
     "htmlWhitespaceSensitivity": {
-      "description": "Whitespace sensitivity in HTML and HTML-in-JS templates. Takes precedence over htmlWhitespaceSensitivityIgnore.",
+      "description": "Whitespace sensitivity in HTML and HTML-in-JS templates. Takes precedence over `htmlWhitespaceSensitivityIgnore`.",
       "type": "string",
       "default": "css",
-      "enum": [
-        "css",
-        "strict",
-        "ignore"
-      ]
+      "oneOf": [{
+        "const": "css",
+        "description": "Whitespace around an element is significant when the element is inline by default in CSS (ex. `<span>`), so it's not added or removed there."
+      }, {
+        "const": "strict",
+        "description": "Whitespace around every element is significant."
+      }, {
+        "const": "ignore",
+        "description": "Whitespace around every element is insignificant, so it's added or removed freely."
+      }],
+      "x-example": {
+        "config": { "lineWidth": 40 },
+        "extension": "html",
+        "input": [
+          "<span class=\"first second\">Some text in a span element.</span>",
+          "<div class=\"first second\">Some text in a div element.</div>"
+        ]
+      }
     },
     "toml.enabled": {
       "description": "Whether to format TOML files.",
@@ -285,7 +509,7 @@
       "$ref": "#/definitions/sortPackageJson"
     },
     "experimentalSortPackageJson": {
-      "description": "Alias of \"sortPackageJson\".",
+      "description": "Alias of `sortPackageJson`.",
       "allOf": [{
         "$ref": "#/definitions/sortPackageJson"
       }]
@@ -294,7 +518,7 @@
       "$ref": "#/definitions/sortImports"
     },
     "experimentalSortImports": {
-      "description": "Alias of \"sortImports\".",
+      "description": "Alias of `sortImports`.",
       "allOf": [{
         "$ref": "#/definitions/sortImports"
       }]
@@ -303,7 +527,7 @@
       "$ref": "#/definitions/sortTailwindcss"
     },
     "experimentalTailwindcss": {
-      "description": "Alias of \"sortTailwindcss\".",
+      "description": "Alias of `sortTailwindcss`.",
       "allOf": [{
         "$ref": "#/definitions/sortTailwindcss"
       }]
@@ -312,7 +536,7 @@
       "description": "Enable JSDoc comment formatting. May be a boolean or an object of options.",
       "oneOf": [{
         "type": "boolean",
-        "description": "Enables it with the default options when true."
+        "description": "Enables it with the default options when `true`."
       }, {
         "type": "object",
         "properties": {
@@ -342,7 +566,7 @@
             "default": false
           },
           "separateReturnsFromParam": {
-            "description": "Add a blank line between the last @param and @returns.",
+            "description": "Add a blank line between the last `@param` and `@returns`.",
             "type": "boolean",
             "default": false
           },
@@ -357,7 +581,7 @@
             "default": false
           },
           "addDefaultToDescription": {
-            "description": "Append default values to @param descriptions.",
+            "description": "Append default values to `@param` descriptions.",
             "type": "boolean",
             "default": true
           },
@@ -379,12 +603,12 @@
             }]
           },
           "descriptionTag": {
-            "description": "Emit an @description tag instead of an inline description.",
+            "description": "Emit a `@description` tag instead of an inline description.",
             "type": "boolean",
             "default": false
           },
           "keepUnparsableExampleIndent": {
-            "description": "Preserve indentation in unparsable @example code.",
+            "description": "Preserve indentation in unparsable `@example` code.",
             "type": "boolean",
             "default": false
           }
@@ -398,7 +622,7 @@
       "description": "Sort import statements. May be a boolean or an object of options.",
       "oneOf": [{
         "type": "boolean",
-        "description": "Enables it with the default options when true."
+        "description": "Enables it with the default options when `true`."
       }, {
         "type": "object",
         "properties": {
@@ -435,12 +659,12 @@
             "default": true
           },
           "newlinesBetween": {
-            "description": "Whether to insert blank lines between different import groups. Defaults to false when \"partitionByNewline\" is true because the two cannot be used together.",
+            "description": "Whether to insert blank lines between different import groups. Defaults to `false` when `partitionByNewline` is `true` because the two cannot be used together.",
             "type": "boolean",
             "default": true
           },
           "newlineBoundaryOverrides": {
-            "description": "Whether to insert blank lines at each boundary between import groups. A null value uses newlinesBetween.",
+            "description": "Whether to insert blank lines at each boundary between import groups. A `null` value uses `newlinesBetween`.",
             "type": "array",
             "items": {
               "type": [
@@ -503,7 +727,7 @@
             ]
           },
           "customGroups": {
-            "description": "Definitions for custom import groups referenced by groups.",
+            "description": "Definitions for custom import groups referenced by `groups`.",
             "type": "array",
             "default": [],
             "items": {
@@ -525,29 +749,41 @@
                   "description": "The import selector that must match.",
                   "type": "string",
                   "oneOf": [{
-                    "const": "type"
+                    "const": "type",
+                    "description": "Type-only imports (ex. `import type { A } from \"a\"`)."
                   }, {
-                    "const": "side_effect_style"
+                    "const": "side_effect_style",
+                    "description": "Style file imports without bindings (ex. `import \"./styles.css\"`)."
                   }, {
-                    "const": "side_effect"
+                    "const": "side_effect",
+                    "description": "Imports without bindings (ex. `import \"./setup.ts\"`)."
                   }, {
-                    "const": "style"
+                    "const": "style",
+                    "description": "Style file imports (ex. CSS or SCSS files)."
                   }, {
-                    "const": "index"
+                    "const": "index",
+                    "description": "Index file imports (ex. `./` or `../`)."
                   }, {
-                    "const": "sibling"
+                    "const": "sibling",
+                    "description": "Sibling module imports (ex. `./a`)."
                   }, {
-                    "const": "parent"
+                    "const": "parent",
+                    "description": "Parent module imports (ex. `../a`)."
                   }, {
-                    "const": "subpath"
+                    "const": "subpath",
+                    "description": "Subpath imports from the `imports` field of `package.json` (ex. `#a`)."
                   }, {
-                    "const": "internal"
+                    "const": "internal",
+                    "description": "Imports that match `internalPattern` (ex. `~/a` or `@/a`)."
                   }, {
-                    "const": "builtin"
+                    "const": "builtin",
+                    "description": "Built-in module imports (ex. `node:fs` or `fs`)."
                   }, {
-                    "const": "external"
+                    "const": "external",
+                    "description": "External module imports (ex. packages in `node_modules`)."
                   }, {
-                    "const": "import"
+                    "const": "import",
+                    "description": "Any import."
                   }]
                 },
                 "modifiers": {
@@ -556,17 +792,23 @@
                   "items": {
                     "type": "string",
                     "oneOf": [{
-                      "const": "side_effect"
+                      "const": "side_effect",
+                      "description": "Imports without bindings."
                     }, {
-                      "const": "type"
+                      "const": "type",
+                      "description": "Type-only imports."
                     }, {
-                      "const": "value"
+                      "const": "value",
+                      "description": "Imports that aren't type-only."
                     }, {
-                      "const": "default"
+                      "const": "default",
+                      "description": "Imports with a default specifier."
                     }, {
-                      "const": "wildcard"
+                      "const": "wildcard",
+                      "description": "Imports with a namespace specifier (ex. `* as a`)."
                     }, {
-                      "const": "named"
+                      "const": "named",
+                      "description": "Imports with named specifiers."
                     }]
                   },
                   "default": []
@@ -582,7 +824,7 @@
       "description": "Options for sorting Tailwind CSS classes. May be a boolean or an object of options. Note that this currently has no effect because Oxc only implements the sorter in JS, which a Wasm plugin cannot run.",
       "oneOf": [{
         "type": "boolean",
-        "description": "Enables it with the default options when true."
+        "description": "Enables it with the default options when `true`."
       }, {
         "type": "object",
         "properties": {
@@ -612,10 +854,11 @@
       }]
     },
     "sortPackageJson": {
-      "description": "Whether to sort the properties of package.json files. May be a boolean or an object of options.",
+      "description": "Whether to sort the properties of `package.json` files. May be a boolean or an object of options.",
       "default": true,
       "oneOf": [{
-        "type": "boolean"
+        "type": "boolean",
+        "description": "Sorts the properties with the default options when `true`."
       }, {
         "type": "object",
         "additionalProperties": false,
