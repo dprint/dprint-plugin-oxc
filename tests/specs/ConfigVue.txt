@@ -1,0 +1,14 @@
+-- App.vue --
+~~ vueIndentScriptAndStyle: true, indentWidth: 4, quoteStyle: single, semicolons: asNeeded ~~
+== indent script and style ==
+<template><div>{{message}}</div></template><script setup>const message="hello"</script><style>.a{color:red}</style>
+[expect]
+<template><div>{{ message }}</div></template>
+<script setup>
+    const message = 'hello'
+</script>
+<style>
+    .a {
+        color: red;
+    }
+</style>

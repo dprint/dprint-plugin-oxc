@@ -434,6 +434,9 @@ pub fn build_html_options(config: &Configuration, variant: HtmlishVariant) -> Ht
   if let Some(value) = config.attribute_position {
     options.single_attribute_per_line = matches!(value, crate::configuration::AttributePosition::Multiline);
   }
+  if let Some(value) = config.vue_indent_script_and_style {
+    options.vue_indent_script_and_style = value;
+  }
   options
 }
 

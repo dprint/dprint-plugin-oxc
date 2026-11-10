@@ -346,6 +346,8 @@ pub struct Configuration {
   pub markdown_enabled: Option<bool>,
   pub toml_enabled: Option<bool>,
   pub html_enabled: Option<bool>,
+  pub vue_enabled: Option<bool>,
+  pub vue_indent_script_and_style: Option<bool>,
 }
 
 impl Configuration {
@@ -366,6 +368,7 @@ impl Configuration {
       Language::Markdown => self.markdown_enabled,
       Language::Toml => self.toml_enabled,
       Language::Html => self.html_enabled,
+      Language::Vue => self.vue_enabled,
     };
     enabled != Some(false)
   }
@@ -387,4 +390,5 @@ pub enum Language {
   Markdown,
   Toml,
   Html,
+  Vue,
 }

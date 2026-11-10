@@ -2,9 +2,14 @@ use std::sync::Arc;
 
 use oxc_allocator::Allocator;
 use oxc_formatter::CssInJsTemplate;
+use oxc_formatter::ExpressionLayout;
+use oxc_formatter::ExpressionRoot;
 use oxc_formatter::HtmlInJsTemplate;
 use oxc_formatter::JsEmbeddedIn;
+use oxc_formatter::JsRoot;
 use oxc_formatter::MarkdownInJsTemplate;
+use oxc_formatter::ProgramLayout;
+use oxc_formatter::ProgramSemicolons;
 use oxc_formatter_core::DispatchRequest;
 use oxc_formatter_core::DispatchResponse;
 use oxc_formatter_core::EmbeddedIr;
@@ -25,6 +30,7 @@ use oxc_formatter_htmlish::HtmlishEmbeddedIn;
 use oxc_formatter_htmlish::HtmlishFormatOptions;
 use oxc_formatter_htmlish::HtmlishVariant;
 use oxc_formatter_htmlish::JsInHtmlEventHandler;
+use oxc_formatter_htmlish::JsInVueTemplate;
 use oxc_formatter_json::JsonFormatOptions;
 use oxc_formatter_json::JsonVariant;
 use oxc_formatter_markdown::MarkdownFormatOptions;
@@ -76,36 +82,23 @@ fn build_dispatcher(config: &Configuration) -> FormatDispatcher {
   let options = EmbeddedOptions::new(config);
   Arc::new(move |session: &FormatSession<'_>, request: DispatchRequest<'_>| {
     let text = request.text;
+    let (js_root, js_embedded_in) = js_root_of(&request);
     Ok(match request.language {
       "javascript" => to_response(oxc_formatter::format_to_ir(
         session,
         text,
         SourceType::from_extension("js").expect("js is a supported source type"),
-        options.js.clone(),
-        request
-          .parent_context
-          .and_then(|context| context.downcast_ref::<XxxInMarkdownCodeBlock>())
-          .map(|_| JsEmbeddedIn::MarkdownCodeBlock)
-          .or_else(|| {
-            request
-              .parent_context_as::<JsInHtmlEventHandler>()
-              .map(|_| JsEmbeddedIn::HtmlEventHandler)
-          }),
+        js_options(&options, js_root),
+        js_root,
+        js_embedded_in,
       )),
       "typescript" | "angular-ts" => to_response(oxc_formatter::format_to_ir(
         session,
         text,
         SourceType::from_extension("ts").expect("ts is a supported source type"),
-        options.js.clone(),
-        request
-          .parent_context
-          .and_then(|context| context.downcast_ref::<XxxInMarkdownCodeBlock>())
-          .map(|_| JsEmbeddedIn::MarkdownCodeBlock)
-          .or_else(|| {
-            request
-              .parent_context_as::<JsInHtmlEventHandler>()
-              .map(|_| JsEmbeddedIn::HtmlEventHandler)
-          }),
+        js_options(&options, js_root),
+        js_root,
+        js_embedded_in,
       )),
       "graphql" | "gql" => to_response(oxc_formatter_graphql::format_to_ir(session, text, options.graphql)),
       "css" | "postcss" | "scss" | "less" => {
@@ -132,7 +125,7 @@ fn build_dispatcher(config: &Configuration) -> FormatDispatcher {
           },
         ))
       }
-      "html" => {
+      "html" | "vue" => {
         let embedded_in = request
           .parent_context_as::<HtmlInJsTemplate>()
           .map(|context| HtmlishEmbeddedIn {
@@ -143,7 +136,14 @@ fn build_dispatcher(config: &Configuration) -> FormatDispatcher {
         to_response(oxc_formatter_htmlish::format_to_ir(
           session,
           text,
-          options.html.clone(),
+          HtmlishFormatOptions {
+            variant: if request.language == "vue" {
+              HtmlishVariant::Vue
+            } else {
+              HtmlishVariant::Html
+            },
+            ..options.html.clone()
+          },
           embedded_in,
         ))
       }
@@ -184,22 +184,103 @@ fn build_dispatcher(config: &Configuration) -> FormatDispatcher {
           session,
           text,
           source_type,
-          options.js.clone(),
-          request
-            .parent_context
-            .and_then(|context| context.downcast_ref::<XxxInMarkdownCodeBlock>())
-            .map(|_| JsEmbeddedIn::MarkdownCodeBlock)
-            .or_else(|| {
-              request
-                .parent_context_as::<JsInHtmlEventHandler>()
-                .map(|_| JsEmbeddedIn::HtmlEventHandler)
-            }),
+          js_options(&options, js_root),
+          js_root,
+          js_embedded_in,
         )),
         Err(_) => DispatchResponse::PreserveOriginal,
       },
       // oxfmt formats other languages with Prettier or not at all
     })
   })
+}
+
+fn js_root_of(request: &DispatchRequest<'_>) -> (JsRoot, JsEmbeddedIn) {
+  let in_attribute = |semicolons| JsRoot::Program {
+    semicolons,
+    layout: ProgramLayout::Indented,
+  };
+  let expression = |layout| ExpressionRoot {
+    layout,
+    tailwind_classes: false,
+    ends_at_double_brace: false,
+    reads_as_statements: false,
+    in_parens: false,
+  };
+  if let Some(&part) = request.parent_context_as::<JsInVueTemplate>() {
+    let root = match part {
+      JsInVueTemplate::Interpolation => JsRoot::Expression(ExpressionRoot {
+        ends_at_double_brace: true,
+        ..expression(ExpressionLayout::Bare)
+      }),
+      JsInVueTemplate::Binding { tailwind_classes } => JsRoot::Expression(ExpressionRoot {
+        tailwind_classes,
+        ..expression(ExpressionLayout::Hug { literals: true })
+      }),
+      JsInVueTemplate::Expression {
+        tailwind_classes,
+        in_parens,
+      } => JsRoot::Expression(ExpressionRoot {
+        tailwind_classes,
+        in_parens,
+        ..expression(ExpressionLayout::Hug { literals: false })
+      }),
+      JsInVueTemplate::HandlerExpression => JsRoot::Expression(ExpressionRoot {
+        reads_as_statements: true,
+        in_parens: true,
+        ..expression(ExpressionLayout::Hug { literals: false })
+      }),
+      JsInVueTemplate::ForSource => JsRoot::Expression(expression(ExpressionLayout::Group)),
+      JsInVueTemplate::Handler => in_attribute(ProgramSemicolons::MarksStatements),
+      JsInVueTemplate::ForAlias => JsRoot::FunctionParams { parens_when_many: true },
+      JsInVueTemplate::SlotProps => JsRoot::FunctionParams {
+        parens_when_many: false,
+      },
+      JsInVueTemplate::ScriptGeneric => JsRoot::TypeParameters,
+    };
+    let in_html_attribute = part != JsInVueTemplate::Interpolation;
+    return (
+      root,
+      JsEmbeddedIn {
+        in_html_attribute,
+        inlines_code: true,
+      },
+    );
+  }
+  if request.parent_context_as::<JsInHtmlEventHandler>().is_some() {
+    let root = in_attribute(ProgramSemicolons::LoneExpressionOmitted);
+    return (
+      root,
+      JsEmbeddedIn {
+        in_html_attribute: true,
+        inlines_code: false,
+      },
+    );
+  }
+  let semicolons = if request.parent_context_as::<XxxInMarkdownCodeBlock>().is_some() {
+    ProgramSemicolons::LoneJsxOmitted
+  } else {
+    ProgramSemicolons::AsOptions
+  };
+  let root = JsRoot::Program {
+    semicolons,
+    layout: ProgramLayout::Bare,
+  };
+  (root, JsEmbeddedIn::default())
+}
+
+fn js_options(options: &EmbeddedOptions, root: JsRoot) -> oxc_formatter::JsFormatOptions {
+  let mut js = options.js.clone();
+  if !matches!(
+    root,
+    JsRoot::Program {
+      layout: ProgramLayout::Bare,
+      ..
+    }
+  ) {
+    js.sort_imports = None;
+  }
+  js
 }
 
 /// The options of the embedded languages, which are those of the file they're embedded in.

@@ -57,13 +57,14 @@
       "proseWrap"
     ]
   }, {
-    "title": "HTML and JSX",
-    "description": "The formatting of HTML and JSX elements and their attributes.",
+    "title": "HTML, Vue, and JSX",
+    "description": "The formatting of HTML, Vue, and JSX elements and their attributes.",
     "properties": [
       "bracketSameLine",
       "attributePosition",
       "htmlWhitespaceSensitivity",
-      "htmlWhitespaceSensitivityIgnore"
+      "htmlWhitespaceSensitivityIgnore",
+      "vueIndentScriptAndStyle"
     ]
   }, {
     "title": "Sorting",
@@ -99,6 +100,7 @@
       "yaml.enabled",
       "markdown.enabled",
       "html.enabled",
+      "vue.enabled",
       "toml.enabled"
     ]
   }],
@@ -283,7 +285,7 @@
       }
     },
     "bracketSameLine": {
-      "description": "Place the last angle bracket in HTML and JSX tags on the same line as the last attribute.",
+      "description": "Place the last angle bracket in HTML, Vue, and JSX tags on the same line as the last attribute.",
       "default": false,
       "type": "boolean",
       "x-example": {
@@ -295,7 +297,7 @@
       }
     },
     "attributePosition": {
-      "description": "How HTML and JSX/TSX attributes are positioned.",
+      "description": "How HTML, Vue, and JSX/TSX attributes are positioned.",
       "type": "string",
       "default": "auto",
       "oneOf": [{
@@ -356,7 +358,7 @@
       "default": false
     },
     "htmlWhitespaceSensitivityIgnore": {
-      "description": "Whether HTML and HTML-in-JS templates always use hard line breaks for wrapping. Used when `htmlWhitespaceSensitivity` is unset.",
+      "description": "Whether HTML, Vue, and HTML-in-JS templates always use hard line breaks for wrapping. Used when `htmlWhitespaceSensitivity` is unset.",
       "type": "boolean",
       "default": false,
       "x-example": {
@@ -472,13 +474,23 @@
       "type": "boolean",
       "default": true
     },
+    "vue.enabled": {
+      "description": "Whether to format Vue files.",
+      "type": "boolean",
+      "default": true
+    },
+    "vueIndentScriptAndStyle": {
+      "description": "Whether to indent script and style blocks in Vue files.",
+      "type": "boolean",
+      "default": false
+    },
     "html.enabled": {
       "description": "Whether to format HTML and XHTML files.",
       "type": "boolean",
       "default": true
     },
     "htmlWhitespaceSensitivity": {
-      "description": "Whitespace sensitivity in HTML and HTML-in-JS templates. Takes precedence over `htmlWhitespaceSensitivityIgnore`.",
+      "description": "Whitespace sensitivity in HTML, Vue, and HTML-in-JS templates. Takes precedence over `htmlWhitespaceSensitivityIgnore`.",
       "type": "string",
       "default": "css",
       "oneOf": [{

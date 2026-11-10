@@ -1,0 +1,9 @@
+-- file.md --
+!! Vue fence !!
+```vue
+<template><div>{{a+1}}</div></template>
+```
+[expect]
+```vue
+<template><div>{{ a + 1 }}</div></template>
+```

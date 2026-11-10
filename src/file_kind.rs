@@ -100,6 +100,7 @@ impl FileKind {
       let variant = match extension {
         Some("html" | "hta" | "htm" | "inc") => Some(HtmlishVariant::Html),
         Some("xhtml" | "xht") => Some(HtmlishVariant::Xhtml),
+        Some("vue") => Some(HtmlishVariant::Vue),
         _ => None,
       };
       if let Some(variant) = variant {
@@ -125,6 +126,7 @@ impl FileKind {
       FileKind::Yaml | FileKind::YamlRc => Language::Yaml,
       FileKind::Markdown => Language::Markdown,
       FileKind::Toml => Language::Toml,
+      FileKind::Html(HtmlishVariant::Vue) => Language::Vue,
       FileKind::Html(_) => Language::Html,
     }
   }
@@ -139,6 +141,7 @@ pub fn file_extensions(config: &Configuration) -> Vec<String> {
       (Language::JavaScript, JS_EXTENSIONS),
       (Language::JavaScript, ADDITIONAL_JS_EXTENSIONS),
       (Language::Toml, &["toml"]),
+      (Language::Vue, &["vue"]),
       (Language::Html, &["html", "hta", "htm", "inc", "xhtml", "xht"]),
       (Language::Json, &["importmap"]),
       (Language::Json, JSON_EXTENSIONS),
@@ -391,7 +394,7 @@ mod test {
       );
     }
     assert_eq!(kind("app.component.html"), None);
-    assert_eq!(kind("file.vue"), None);
+    assert_eq!(kind("App.vue"), Some(FileKind::Html(HtmlishVariant::Vue)));
     assert_eq!(kind("file.txt"), None);
   }
 
@@ -466,7 +469,7 @@ mod test {
     };
     let all_paths = paths(&Configuration::default());
     type DisableFn = fn(&mut Configuration);
-    let disable_fns: [(Language, DisableFn); 13] = [
+    let disable_fns: [(Language, DisableFn); 14] = [
       (Language::JavaScript, |config| config.javascript_enabled = Some(false)),
       (Language::TypeScript, |config| config.typescript_enabled = Some(false)),
       (Language::Json, |config| config.json_enabled = Some(false)),
@@ -480,6 +483,7 @@ mod test {
       (Language::Markdown, |config| config.markdown_enabled = Some(false)),
       (Language::Toml, |config| config.toml_enabled = Some(false)),
       (Language::Html, |config| config.html_enabled = Some(false)),
+      (Language::Vue, |config| config.vue_enabled = Some(false)),
     ];
     for (disabled, disable) in disable_fns {
       let mut config = Configuration::default();

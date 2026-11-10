@@ -1,0 +1,6 @@
+-- App.vue --
+~~ vue.enabled: false ~~
+== disabled Vue ==
+<template><div>{{a+1}}</div></template>
+[expect]
+<template><div>{{a+1}}</div></template>

@@ -163,7 +163,7 @@ function buildRefixPrompt(review: ReviewResult): string {
 // the languages the plugin formats. Keep this in sync with `FileKind` in
 // `src/file_kind.rs` (the fixer is told to update it when adding a language).
 function describeLanguages(): string {
-  return "JavaScript/TypeScript (`oxc_formatter`), JSON/JSONC/JSON5 (`oxc_formatter_json`), CSS/SCSS/Less (`oxc_formatter_css`), GraphQL (`oxc_formatter_graphql`), YAML (`oxc_formatter_yaml`), Markdown (`oxc_formatter_markdown`), TOML (`oxc_formatter_toml`, wrapping `oxc-toml`), and HTML/XHTML (`oxc_formatter_htmlish`). Markdown uses the same shared options oxfmt maps to it (`proseWrap` and `singleQuote`) and its native embedded-code formatting.";
+  return "JavaScript/TypeScript (`oxc_formatter`), JSON/JSONC/JSON5 (`oxc_formatter_json`), CSS/SCSS/Less (`oxc_formatter_css`), GraphQL (`oxc_formatter_graphql`), YAML (`oxc_formatter_yaml`), Markdown (`oxc_formatter_markdown`), TOML (`oxc_formatter_toml`, wrapping `oxc-toml`), and HTML/XHTML/Vue (`oxc_formatter_htmlish`). Markdown uses the same shared options oxfmt maps to it (`proseWrap` and `singleQuote`) and its native embedded-code formatting.";
 }
 
 function describeWiring(): string {

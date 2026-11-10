@@ -1,0 +1,29 @@
+-- App.vue --
+== template script and style ==
+<template><div>{{ message+ "!" }}</div></template><script setup lang="ts">const message:string="hello"</script><style scoped>.a{color:red}</style>
+[expect]
+<template><div>{{ message + "!" }}</div></template>
+<script setup lang="ts">
+const message: string = "hello";
+</script>
+<style scoped>
+.a {
+  color: red;
+}
+</style>
+
+== template expressions ==
+<template><button :disabled="count>2" @click="count++;save(count)" v-for="(item,index) in items">{{item.name}}</button></template>
+[expect]
+<template>
+  <button
+    :disabled="count > 2"
+    @click="
+      count++;
+      save(count);
+    "
+    v-for="(item, index) in items"
+  >
+    {{ item.name }}
+  </button>
+</template>
