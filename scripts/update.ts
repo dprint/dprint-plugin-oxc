@@ -163,7 +163,7 @@ function tagToVersion(tag: string) {
 }
 
 async function updateRustToolchain(tag: string) {
-  const client = new Octokit();
+  const client = new Octokit({ auth: Deno.env.get("GITHUB_TOKEN") });
   const response = await client.rest.repos.getContent({
     owner: "oxc-project",
     repo: "oxc",
@@ -194,7 +194,7 @@ async function updateRustToolchain(tag: string) {
 }
 
 async function updateCratesIoDependencies(tag: string) {
-  const client = new Octokit();
+  const client = new Octokit({ auth: Deno.env.get("GITHUB_TOKEN") });
   const response = await client.rest.repos.getContent({
     owner: "oxc-project",
     repo: "oxc",
@@ -227,7 +227,7 @@ async function updateCratesIoDependencies(tag: string) {
 }
 
 async function getGitTags(): Promise<string[]> {
-  const client = new Octokit();
+  const client = new Octokit({ auth: Deno.env.get("GITHUB_TOKEN") });
   const tags = await client.paginate("GET /repos/{owner}/{repo}/tags", {
     owner: "oxc-project",
     repo: "oxc",
