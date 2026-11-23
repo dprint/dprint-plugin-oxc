@@ -654,7 +654,7 @@
             "default": false
           },
           "order": {
-            "description": "Sort order (ascending or descending).",
+            "description": "Sort import sources in ascending or descending order. Group order and the order of entries within each group stay as configured.",
             "type": "string",
             "default": "asc",
             "oneOf": [{
@@ -699,7 +699,7 @@
             ]
           },
           "groups": {
-            "description": "The groups to sort the imports into. Each item is a group name, an array of group names that are sorted together, or a `{ \"newlinesBetween\": boolean }` marker that overrides whether there is a blank line between the groups before and after it.",
+            "description": "The groups to sort the imports into. Each item is a group name, an array of group names that are sorted together, or a `{ \"newlinesBetween\": boolean }` marker that overrides whether there is a blank line between the groups before and after it. Within an array of group names, the order of names breaks ties between imports from the same source.",
             "type": "array",
             "items": {
               "oneOf": [{

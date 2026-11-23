@@ -244,6 +244,7 @@ fn js_root_of(request: &DispatchRequest<'_>) -> (JsRoot, JsEmbeddedIn) {
       JsEmbeddedIn {
         in_html_attribute,
         inlines_code: true,
+        ..JsEmbeddedIn::default()
       },
     );
   }
@@ -253,7 +254,7 @@ fn js_root_of(request: &DispatchRequest<'_>) -> (JsRoot, JsEmbeddedIn) {
       root,
       JsEmbeddedIn {
         in_html_attribute: true,
-        inlines_code: false,
+        ..JsEmbeddedIn::default()
       },
     );
   }

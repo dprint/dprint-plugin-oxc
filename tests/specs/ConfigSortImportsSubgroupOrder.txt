@@ -1,0 +1,12 @@
+~~ {"sortImports": {"groups": [["type-external", "value-external"]], "order": "desc"}} ~~
+== should use subgroup order to break ties when sorting sources in descending order ==
+import { a } from "alpha";
+import { b } from "beta";
+import type { A } from "alpha";
+import type { B } from "beta";
+
+[expect]
+import type { B } from "beta";
+import { b } from "beta";
+import type { A } from "alpha";
+import { a } from "alpha";
